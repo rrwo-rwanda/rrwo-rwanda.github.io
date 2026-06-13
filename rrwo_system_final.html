@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RRWO Campaign System</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:Arial,sans-serif;background:#f0f2f0;min-height:100vh;}
+#pg_login{min-height:100vh;background:linear-gradient(135deg,#0d3320,#1a5c38);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+#pg_login h1{color:#fff;font-size:22px;margin-bottom:4px;text-align:center;}
+#pg_login p{color:rgba(255,255,255,.7);font-size:13px;margin-bottom:24px;}
+.lcard{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:360px;}
+.lcard h3{color:#1a5c38;font-size:14px;font-weight:800;text-align:center;margin-bottom:16px;}
+.sbtn{width:100%;padding:13px;margin-bottom:8px;border:2px solid #ddd;border-radius:10px;background:#f5f5f5;cursor:pointer;display:flex;align-items:center;gap:11px;font-size:13px;text-align:left;}
+.sbtn:hover{background:#e8f4ed;border-color:#1a5c38;}
+.sico{width:38px;height:38px;border-radius:8px;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sbtn h4{font-size:13px;font-weight:700;margin:0;}
+.sbtn small{font-size:10px;color:#555;}
+#pg_app{display:none;flex-direction:column;min-height:100vh;}
+.tb{background:#0d3320;padding:10px 15px;display:flex;align-items:center;justify-content:space-between;}
+.tb-l{display:flex;align-items:center;gap:8px;}
+.tblogo{width:30px;height:30px;border-radius:50%;background:#fff;overflow:hidden;}
+.tblogo img{width:100%;height:100%;object-fit:contain;}
+.tb-title{font-size:12px;font-weight:800;color:#fff;}
+.tb-sub{font-size:10px;color:rgba(255,255,255,.6);}
+.tb-r{display:flex;align-items:center;gap:7px;}
+.tb-sync{font-size:10px;color:rgba(255,255,255,.6);}
+.tb-cnt{background:rgba(255,255,255,.15);padding:3px 9px;border-radius:11px;font-size:11px;color:#fff;font-weight:600;}
+.tb-exit{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:11px;padding:4px 9px;border-radius:5px;cursor:pointer;}
+.flag{height:4px;background:linear-gradient(to right,#20603D 33%,#FAD201 33%,#FAD201 66%,#20603D 66%);}
+.sbar{background:#fff;padding:7px 13px;border-bottom:1px solid #ddd;gap:7px;align-items:center;}
+.sbar input{flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;}
+.sbar input:focus{outline:none;border-color:#1a5c38;}
+#sres{background:#fff;}
+.sri{padding:8px 15px;display:flex;align-items:center;gap:9px;cursor:pointer;border-bottom:1px solid #eee;}
+.sri:hover{background:#e8f4ed;}
+.main{flex:1;padding:13px;max-width:860px;margin:0 auto;width:100%;}
+.card{background:#fff;border-radius:10px;padding:15px;margin-bottom:11px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.card h2{font-size:13px;font-weight:800;color:#1a5c38;margin-bottom:3px;}
+.card .sub{font-size:11px;color:#555;margin-bottom:11px;}
+.sh{border-radius:7px;padding:7px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.sh-g{background:#1a5c38;}.sh-b{background:#1a5c9a;}.sh-p{background:#6b3fa0;}.sh-o{background:#c8920a;}.sh-r{background:#b5221e;}.sh-gr{background:#555;}
+.sh h3{font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.3px;margin:0;}
+.sh span{font-size:10px;color:rgba(255,255,255,.7);}
+.f{margin-bottom:10px;}
+.f label{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;}
+.f input,.f select,.f textarea{width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;font-family:Arial,sans-serif;background:#fafafa;}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:#1a5c38;background:#fff;}
+.f select{padding-right:24px;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%231a5c38' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.f select:disabled{opacity:.4;}
+.f textarea{resize:none;height:65px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.req{color:#b5221e;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:13px;}
+.sc{background:#fff;border-radius:8px;padding:9px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.snum{font-size:20px;font-weight:800;color:#1a5c38;}
+.slbl{font-size:9px;color:#555;font-weight:700;text-transform:uppercase;margin-top:1px;}
+.ql{display:flex;flex-direction:column;gap:6px;}
+.qi{background:#fff;border:1px solid #ddd;border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:8px;}
+.qn{width:32px;height:32px;border-radius:7px;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qi-i{flex:1;min-width:0;}
+.qi-n{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qi-m{font-size:10px;color:#555;margin-top:2px;display:flex;flex-wrap:wrap;gap:3px;align-items:center;}
+.qi-a{display:flex;gap:3px;flex-shrink:0;}
+.bdg{display:inline-block;padding:1px 6px;border-radius:7px;font-size:9px;font-weight:700;}
+.btn{padding:8px 14px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;}
+.bG{background:#1a5c38;color:#fff;width:100%;padding:11px;font-size:13px;}
+.bG:hover{background:#0d3320;}
+.bB{background:#1a5c9a;color:#fff;}
+.bP{background:#6b3fa0;color:#fff;}
+.bO{background:#c8920a;color:#fff;}
+.bR{background:#b5221e;color:#fff;}
+.bX{background:transparent;color:#555;border:1.5px solid #ddd;}
+.bX:hover{border-color:#1a5c38;color:#1a5c38;}
+.bsm{padding:4px 9px;font-size:10px;}
+.svcs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:11px;}
+.svc{border:2px solid #ddd;border-radius:9px;padding:12px 8px;text-align:center;cursor:pointer;background:#fafafa;}
+.svc.EY{border-color:#1a5c9a;background:#e8f0fb;}
+.svc.NC{border-color:#1a5c38;background:#e8f4ed;}
+.svc.CH{border-color:#c8920a;background:#fdf3d8;}
+.svc .si{font-size:24px;margin-bottom:4px;}
+.svc .sn2{font-size:11px;font-weight:800;}
+.svc .sd{font-size:9px;color:#555;margin-top:1px;}
+.al{padding:8px 11px;border-radius:7px;margin-bottom:9px;font-size:12px;font-weight:600;}
+.aOK{background:#e8f4ed;color:#1a5c38;}
+.aER{background:#fdf0ef;color:#b5221e;}
+.emp{text-align:center;padding:24px;color:#555;}
+.emp .ei{font-size:30px;margin-bottom:7px;}
+.emp .et{font-size:13px;font-weight:600;}
+.dc{border-radius:9px;padding:11px;margin-bottom:10px;}
+.dcG{background:#e8f4ed;}.dcB{background:#e8f0fb;}.dcP{background:#f0ebfa;}.dcO{background:#fdf3d8;}.dcR{background:#fdf0ef;}
+.dc h4{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
+.dr{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.05);}
+.dr:last-child{border:none;}
+.dr span:first-child{color:#555;font-weight:600;}
+.dr span:last-child{font-weight:700;text-align:right;max-width:58%;}
+.rx{background:#fafafa;border:1px solid #ddd;border-radius:7px;padding:7px 10px;margin-bottom:5px;display:flex;gap:6px;align-items:center;}
+.rx input{flex:1;border:none;background:transparent;font-size:12px;outline:none;}
+.rxd{background:none;border:none;color:#b5221e;cursor:pointer;font-size:13px;}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;padding:12px;}
+.mo.show{display:flex;}
+.mb{background:#fff;border-radius:13px;padding:18px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;position:relative;}
+.mt{font-size:14px;font-weight:800;color:#1a5c38;margin-bottom:11px;padding-right:22px;}
+.mc{position:absolute;top:13px;right:13px;background:none;border:none;font-size:18px;cursor:pointer;color:#555;}
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:22px 26px;box-shadow:0 6px 32px rgba(0,0,0,.2);text-align:center;z-index:200;min-width:210px;}
+.ch{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px;}
+.cb{background:#fff;border-radius:9px;padding:11px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.ct{font-size:11px;font-weight:800;margin-bottom:9px;}
+.bw{display:flex;flex-direction:column;gap:5px;}
+.brow{display:flex;align-items:center;gap:6px;font-size:10px;}
+.blbl{width:65px;color:#555;font-weight:600;flex-shrink:0;}
+.bbar{flex:1;background:#eee;border-radius:3px;height:12px;overflow:hidden;}
+.bfil{height:100%;border-radius:3px;}
+.bval{width:20px;text-align:right;font-weight:700;}
+.labrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;}
+.labrow:last-child{border:none;}
+.labrow label{flex:1;font-size:12px;font-weight:600;color:#333;}
+.labrow input,.labrow select{width:140px;padding:5px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;}
+.vitrow{display:flex;align-items:center;gap:8px;padding:5px 0;}
+.vitrow label{width:140px;font-size:12px;font-weight:600;color:#555;flex-shrink:0;}
+.vitrow input,.vitrow select{flex:1;padding:6px 9px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;}
+.section-divider{background:#f5f5f5;border-radius:6px;padding:5px 10px;margin:10px 0 8px;font-size:10px;font-weight:800;color:#555;text-transform:uppercase;letter-spacing:.4px;}
+@media(max-width:540px){.stats{grid-template-columns:1fr 1fr;}.g2{grid-template-columns:1fr;}.g3{grid-template-columns:1fr;}.svcs{grid-template-columns:1fr;}.ch{grid-template-columns:1fr;}.main{padding:9px;}.vitrow{flex-direction:column;align-items:flex-start;}.vitrow label{width:100%;}}
+</style></head><body>
+<div id="pg_login">
+  <h1>RRWO Health Campaign</h1>
+  <p>Patient Management System &middot; 2025</p>
+  <div class="lcard">
+    <h3>Select Your Station</h3>
+    <button class="sbtn" onclick="goStn('reception')"><div class="sico" style="background:#e8f4ed;">&#127973;</div><div><h4>Reception</h4><small>Register patients &amp; assign services</small></div></button>
+    <button class="sbtn" onclick="goStn('consultation')"><div class="sico" style="background:#e8f0fb;">&#9877;</div><div><h4>Consultation</h4><small>Vital signs, lab, diagnosis &amp; treatment</small></div></button>
+    <button class="sbtn" onclick="goStn('pharmacy')"><div class="sico" style="background:#f0ebfa;">&#128138;</div><div><h4>Pharmacy</h4><small>Dispense meds &amp; discharge</small></div></button>
+    <button class="sbtn" onclick="goStn('dashboard')"><div class="sico" style="background:#fdf3d8;">&#128202;</div><div><h4>Dashboard</h4><small>Statistics &amp; export</small></div></button>
+  </div>
+
+</div>
+<div id="pg_app">
+  <div class="tb">
+    <div class="tb-l">
+      <div class="tblogo"><img id="limg" alt="RRWO"></div>
+      <div><div class="tb-title">RRWO Campaign System</div><div class="tb-sub" id="stnlbl">Reception</div></div>
+    </div>
+    <div class="tb-r">
+      <div class="tb-sync" id="synclbl">Ready</div>
+      <div class="tb-cnt" id="ptcnt">0 Patients</div>
+      <button class="tb-exit" onclick="doExit()">Exit</button>
+    </div>
+  </div>
+  <div class="flag"></div>
+  <div class="sbar" id="srchbar" style="display:none;">
+    <input id="sinp" placeholder="Search name, ID, #, district..." oninput="doSearch(this.value)">
+    <button class="btn bX bsm" onclick="clrSearch()">Clear</button>
+  </div>
+  <div id="sres"></div>
+  <div class="main" id="maindiv"></div>
+</div>
+<div class="mo" id="modal" onclick="if(event.target===this)closeMo()">
+  <div class="mb"><button class="mc" onclick="closeMo()">&#x2715;</button><div id="mbody"></div></div>
+</div>
+<script>
+var RW={"Kigali City": {"Gasabo": {"Bumbogo": ["Bumbogo", "Gasabo", "Gisozi"], "Gatsata": ["Gatsata", "Gikondo", "Gitega"], "Gikomero": ["Gikomero", "Gisozi", "Kanombe"], "Gisozi": ["Gisozi", "Jabana", "Jali"], "Jabana": ["Jabana", "Jali", "Kinyinya"], "Jali": ["Jali", "Kinyinya", "Ndera"], "Kinyinya": ["Kinyinya", "Ndera", "Rutunga"], "Ndera": ["Ndera", "Rutunga", "Shyorongi"], "Nduba": ["Nduba", "Rutunga", "Shyorongi"], "Remera": ["Remera", "Gisozi", "Kacyiru"], "Rusororo": ["Rusororo", "Shyorongi", "Bumbogo"], "Rutunga": ["Rutunga", "Shyorongi", "Bumbogo"]}, "Kicukiro": {"Gahanga": ["Gahanga", "Kanombe", "Kigarama"], "Gatenga": ["Gatenga", "Gikondo", "Kagarama"], "Gikondo": ["Gikondo", "Kagarama", "Kanombe"], "Kagarama": ["Kagarama", "Kanombe", "Kigarama"], "Kanombe": ["Kanombe", "Kagarama", "Kigarama"], "Kicukiro": ["Kicukiro", "Gikondo", "Kagarama"], "Kigarama": ["Kigarama", "Masaka", "Gahanga"], "Masaka": ["Masaka", "Gahanga", "Kanombe"], "Niboye": ["Niboye", "Gikondo", "Kagarama"], "Nyarugunga": ["Nyarugunga", "Gahanga", "Kanombe"]}, "Nyarugenge": {"Gitega": ["Gitega", "Kigali", "Muhima"], "Kanyinya": ["Kanyinya", "Kimisagara", "Kiyovu"], "Kigali": ["Kigali", "Gitega", "Muhima"], "Kimisagara": ["Kimisagara", "Kiyovu", "Mageragere"], "Mageragere": ["Mageragere", "Kimisagara", "Kiyovu"], "Muhima": ["Muhima", "Gitega", "Kigali"], "Nyakabanda": ["Nyakabanda", "Gitega", "Muhima"], "Nyamirambo": ["Nyamirambo", "Gitega", "Kigali"], "Nyarugenge": ["Nyarugenge", "Gitega", "Muhima"], "Rwezamenyo": ["Rwezamenyo", "Gitega", "Muhima"]}}, "Northern Province": {"Burera": {"Bungwe": ["Bungwe", "Gatebe", "Kagogo"], "Butaro": ["Butaro", "Coko", "Gashaki"], "Cyanika": ["Cyanika", "Gatebe", "Kagogo"], "Cyeru": ["Cyeru", "Bungwe", "Gatebe"], "Gahunga": ["Gahunga", "Gitovu", "Kagogo"], "Gatebe": ["Gatebe", "Kagogo", "Karwasa"], "Gitovu": ["Gitovu", "Gahunga", "Kagogo"], "Kagogo": ["Kagogo", "Bungwe", "Gatebe"], "Kinoni": ["Kinoni", "Bungwe", "Cyanika"], "Kinyababa": ["Kinyababa", "Bungwe", "Cyanika"], "Kivuye": ["Kivuye", "Bungwe", "Cyanika"], "Nemba": ["Nemba", "Bungwe", "Gatebe"], "Rugarama": ["Rugarama", "Bungwe", "Cyanika"], "Rugendabari": ["Rugendabari", "Bungwe", "Cyanika"], "Ruhunde": ["Ruhunde", "Bungwe", "Cyanika"], "Rusarabuge": ["Rusarabuge", "Cyanika", "Gatebe"], "Rwerere": ["Rwerere", "Bungwe", "Cyanika"]}, "Gakenke": {"Busengo": ["Busengo", "Coko", "Gashenyi"], "Coko": ["Coko", "Busengo", "Gashenyi"], "Gashenyi": ["Gashenyi", "Busengo", "Coko"], "Janja": ["Janja", "Busengo", "Coko"], "Kamubuga": ["Kamubuga", "Busengo", "Coko"], "Karama": ["Karama", "Busengo", "Coko"], "Kivuruga": ["Kivuruga", "Busengo", "Coko"], "Mataba": ["Mataba", "Busengo", "Coko"], "Minazi": ["Minazi", "Busengo", "Coko"], "Muhondo": ["Muhondo", "Busengo", "Coko"], "Muyongwe": ["Muyongwe", "Busengo", "Coko"], "Muzo": ["Muzo", "Busengo", "Coko"], "Nemba": ["Nemba", "Busengo", "Coko"], "Ruli": ["Ruli", "Busengo", "Coko"], "Rusasa": ["Rusasa", "Busengo", "Coko"], "Rushashi": ["Rushashi", "Busengo", "Coko"]}, "Gicumbi": {"Bukure": ["Bukure", "Byumba", "Cyumba"], "Bungwe": ["Bungwe", "Byumba", "Cyumba"], "Byumba": ["Byumba", "Bukure", "Cyumba"], "Cyumba": ["Cyumba", "Bukure", "Byumba"], "Gicumbi": ["Gicumbi", "Bukure", "Byumba"], "Kaniga": ["Kaniga", "Bukure", "Byumba"], "Manyagiro": ["Manyagiro", "Bukure", "Byumba"], "Miyove": ["Miyove", "Bukure", "Byumba"], "Mugambazi": ["Mugambazi", "Bukure", "Byumba"], "Mutete": ["Mutete", "Bukure", "Byumba"], "Nyamiyaga": ["Nyamiyaga", "Bukure", "Byumba"], "Rubaya": ["Rubaya", "Bukure", "Byumba"], "Rukomo": ["Rukomo", "Bukure", "Byumba"], "Rushaki": ["Rushaki", "Bukure", "Byumba"], "Rutare": ["Rutare", "Bukure", "Byumba"], "Ruvune": ["Ruvune", "Bukure", "Byumba"], "Rwamiko": ["Rwamiko", "Bukure", "Byumba"], "Shangasha": ["Shangasha", "Bukure", "Byumba"]}, "Musanze": {"Busogo": ["Busogo", "Cyuve", "Gataraga"], "Cyuve": ["Cyuve", "Busogo", "Gataraga"], "Gataraga": ["Gataraga", "Busogo", "Cyuve"], "Gashaki": ["Gashaki", "Busogo", "Cyuve"], "Kimonyi": ["Kimonyi", "Busogo", "Cyuve"], "Kinigi": ["Kinigi", "Busogo", "Cyuve"], "Muhoza": ["Muhoza", "Busogo", "Cyuve"], "Muko": ["Muko", "Busogo", "Cyuve"], "Musanze": ["Musanze", "Busogo", "Cyuve"], "Nkotsi": ["Nkotsi", "Busogo", "Cyuve"], "Nyange": ["Nyange", "Busogo", "Cyuve"], "Remera": ["Remera", "Busogo", "Cyuve"], "Rwaza": ["Rwaza", "Busogo", "Cyuve"], "Shingiro": ["Shingiro", "Busogo", "Cyuve"]}, "Rulindo": {"Base": ["Base", "Burega", "Bushoki"], "Burega": ["Burega", "Base", "Bushoki"], "Bushoki": ["Bushoki", "Base", "Burega"], "Buyoga": ["Buyoga", "Base", "Burega"], "Cyinzuzi": ["Cyinzuzi", "Base", "Burega"], "Cyungo": ["Cyungo", "Base", "Burega"], "Kinihira": ["Kinihira", "Base", "Burega"], "Kisaro": ["Kisaro", "Base", "Burega"], "Masoro": ["Masoro", "Base", "Burega"], "Mbogo": ["Mbogo", "Base", "Burega"], "Murambi": ["Murambi", "Base", "Burega"], "Ngoma": ["Ngoma", "Base", "Burega"], "Ntarabana": ["Ntarabana", "Base", "Burega"], "Rukozo": ["Rukozo", "Base", "Burega"], "Rusiga": ["Rusiga", "Base", "Burega"], "Shyorongi": ["Shyorongi", "Base", "Burega"], "Tumba": ["Tumba", "Base", "Burega"]}}, "Southern Province": {"Gisagara": {"Gisakura": ["Gisakura", "Gishubi", "Kansi"], "Gishubi": ["Gishubi", "Gisakura", "Kansi"], "Kansi": ["Kansi", "Gisakura", "Gishubi"], "Kibirizi": ["Kibirizi", "Gisakura", "Gishubi"], "Kigembe": ["Kigembe", "Gisakura", "Gishubi"], "Mamba": ["Mamba", "Gisakura", "Gishubi"], "Muganza": ["Muganza", "Gisakura", "Gishubi"], "Mugombwa": ["Mugombwa", "Gisakura", "Gishubi"], "Mukindo": ["Mukindo", "Gisakura", "Gishubi"], "Musha": ["Musha", "Gisakura", "Gishubi"], "Ndora": ["Ndora", "Gisakura", "Gishubi"], "Nyanza": ["Nyanza", "Gisakura", "Gishubi"], "Save": ["Save", "Gisakura", "Gishubi"]}, "Huye": {"Gishamvu": ["Gishamvu", "Karama", "Kigoma"], "Karama": ["Karama", "Gishamvu", "Kigoma"], "Kigoma": ["Kigoma", "Gishamvu", "Karama"], "Kinazi": ["Kinazi", "Gishamvu", "Karama"], "Maraba": ["Maraba", "Gishamvu", "Karama"], "Mbazi": ["Mbazi", "Gishamvu", "Karama"], "Mukura": ["Mukura", "Gishamvu", "Karama"], "Ngoma": ["Ngoma", "Gishamvu", "Karama"], "Ruhashya": ["Ruhashya", "Gishamvu", "Karama"], "Rusatira": ["Rusatira", "Gishamvu", "Karama"], "Rwaniro": ["Rwaniro", "Gishamvu", "Karama"], "Simbi": ["Simbi", "Gishamvu", "Karama"], "Tumba": ["Tumba", "Gishamvu", "Karama"]}, "Muhanga": {"Cyeza": ["Cyeza", "Kabacuzi", "Kibangu"], "Kabacuzi": ["Kabacuzi", "Cyeza", "Kibangu"], "Kibangu": ["Kibangu", "Cyeza", "Kabacuzi"], "Kiyumba": ["Kiyumba", "Cyeza", "Kabacuzi"], "Muhanga": ["Muhanga", "Cyeza", "Kabacuzi"], "Mushishiro": ["Mushishiro", "Cyeza", "Kabacuzi"], "Nyabinoni": ["Nyabinoni", "Cyeza", "Kabacuzi"], "Nyamabuye": ["Nyamabuye", "Cyeza", "Kabacuzi"], "Nyamure": ["Nyamure", "Cyeza", "Kabacuzi"], "Rongi": ["Rongi", "Cyeza", "Kabacuzi"], "Rugendabari": ["Rugendabari", "Cyeza", "Kabacuzi"]}}, "Eastern Province": {"Bugesera": {"Gashora": ["Gashora", "Jarama", "Kamabuye"], "Jarama": ["Jarama", "Gashora", "Kamabuye"], "Kamabuye": ["Kamabuye", "Gashora", "Jarama"], "Mareba": ["Mareba", "Gashora", "Jarama"], "Mayange": ["Mayange", "Gashora", "Jarama"], "Musenyi": ["Musenyi", "Gashora", "Jarama"], "Mwogo": ["Mwogo", "Gashora", "Jarama"], "Ngeruka": ["Ngeruka", "Gashora", "Jarama"], "Ntarama": ["Ntarama", "Gashora", "Jarama"], "Nyamata": ["Nyamata", "Gashora", "Jarama"], "Rilima": ["Rilima", "Gashora", "Jarama"], "Ruhuha": ["Ruhuha", "Gashora", "Jarama"], "Rweru": ["Rweru", "Gashora", "Jarama"], "Shyara": ["Shyara", "Gashora", "Jarama"]}, "Gatsibo": {"Gasange": ["Gasange", "Gatsibo", "Gitoki"], "Gatsibo": ["Gatsibo", "Gasange", "Gitoki"], "Gitoki": ["Gitoki", "Gasange", "Gatsibo"], "Kabarore": ["Kabarore", "Gasange", "Gatsibo"], "Kageyo": ["Kageyo", "Gasange", "Gatsibo"], "Kiramuruzi": ["Kiramuruzi", "Gasange", "Gatsibo"], "Kiziguro": ["Kiziguro", "Gasange", "Gatsibo"], "Muhura": ["Muhura", "Gasange", "Gatsibo"], "Murambi": ["Murambi", "Gasange", "Gatsibo"], "Ngarama": ["Ngarama", "Gasange", "Gatsibo"], "Nyagihanga": ["Nyagihanga", "Gasange", "Gatsibo"], "Remera": ["Remera", "Gasange", "Gatsibo"], "Rugarama": ["Rugarama", "Gasange", "Gatsibo"], "Rwimbogo": ["Rwimbogo", "Gasange", "Gatsibo"]}, "Nyagatare": {"Gatunda": ["Gatunda", "Karama", "Karangazi"], "Karama": ["Karama", "Gatunda", "Karangazi"], "Karangazi": ["Karangazi", "Gatunda", "Karama"], "Katabagemu": ["Katabagemu", "Gatunda", "Karama"], "Kiyombe": ["Kiyombe", "Gatunda", "Karama"], "Matimba": ["Matimba", "Gatunda", "Karama"], "Mimuli": ["Mimuli", "Gatunda", "Karama"], "Mukama": ["Mukama", "Gatunda", "Karama"], "Musheli": ["Musheli", "Gatunda", "Karama"], "Nyagatare": ["Nyagatare", "Gatunda", "Karama"], "Rukomo": ["Rukomo", "Gatunda", "Karama"], "Rwempasha": ["Rwempasha", "Gatunda", "Karama"], "Rwimiyaga": ["Rwimiyaga", "Gatunda", "Karama"], "Tabagwe": ["Tabagwe", "Gatunda", "Karama"]}}, "Western Province": {"Karongi": {"Bwishyura": ["Bwishyura", "Gishyita", "Gitesi"], "Gishyita": ["Gishyita", "Bwishyura", "Gitesi"], "Gitesi": ["Gitesi", "Bwishyura", "Gishyita"], "Mubuga": ["Mubuga", "Bwishyura", "Gishyita"], "Murambi": ["Murambi", "Bwishyura", "Gishyita"], "Murundi": ["Murundi", "Bwishyura", "Gishyita"], "Mutuntu": ["Mutuntu", "Bwishyura", "Gishyita"], "Rubengera": ["Rubengera", "Bwishyura", "Gishyita"], "Rugabano": ["Rugabano", "Bwishyura", "Gishyita"], "Ruganda": ["Ruganda", "Bwishyura", "Gishyita"], "Rwankuba": ["Rwankuba", "Bwishyura", "Gishyita"], "Twumba": ["Twumba", "Bwishyura", "Gishyita"]}, "Rubavu": {"Bugeshi": ["Bugeshi", "Busasamana", "Cyanzarwe"], "Busasamana": ["Busasamana", "Bugeshi", "Cyanzarwe"], "Cyanzarwe": ["Cyanzarwe", "Bugeshi", "Busasamana"], "Gisenyi": ["Gisenyi", "Bugeshi", "Busasamana"], "Kanama": ["Kanama", "Bugeshi", "Busasamana"], "Kanzenze": ["Kanzenze", "Bugeshi", "Busasamana"], "Mudende": ["Mudende", "Bugeshi", "Busasamana"], "Nyakiliba": ["Nyakiliba", "Bugeshi", "Busasamana"], "Nyamyumba": ["Nyamyumba", "Bugeshi", "Busasamana"], "Nyundo": ["Nyundo", "Bugeshi", "Busasamana"], "Rubavu": ["Rubavu", "Bugeshi", "Busasamana"]}, "Rusizi": {"Bugarama": ["Bugarama", "Bweyeye", "Gashonga"], "Bweyeye": ["Bweyeye", "Bugarama", "Gashonga"], "Gashonga": ["Gashonga", "Bugarama", "Bweyeye"], "Giheke": ["Giheke", "Bugarama", "Bweyeye"], "Gihundwe": ["Gihundwe", "Bugarama", "Bweyeye"], "Gikundamvura": ["Gikundamvura", "Bugarama", "Bweyeye"], "Gitambi": ["Gitambi", "Bugarama", "Bweyeye"], "Kamembe": ["Kamembe", "Bugarama", "Bweyeye"], "Muganza": ["Muganza", "Bugarama", "Bweyeye"], "Mururu": ["Mururu", "Bugarama", "Bweyeye"], "Nkungu": ["Nkungu", "Bugarama", "Bweyeye"], "Nyakarenzo": ["Nyakarenzo", "Bugarama", "Bweyeye"], "Nzahaha": ["Nzahaha", "Bugarama", "Bweyeye"], "Rwimbogo": ["Rwimbogo", "Bugarama", "Bweyeye"]}}};
+var API='https://script.google.com/macros/s/AKfycbwEBMdGSixYWNeuM5X2aZxDeV_RIDCL8oDmXLqnFay6fPi9XoEjfHmBj0WWUdHE1azL/exec';
+var KEY='rrwov7';
+var pts=[];var cur=null;var sv=null;var ptmr=null;
+document.getElementById('limg').src='https://rrwo-rwanda.github.io/WhatsApp_Image_2026-03-18_at_21_10_39__1_.jpeg';
+
+function setSync(t){var e=document.getElementById('synclbl');if(e)e.textContent=t;}
+function updCnt(){var n=pts.filter(function(p){return p.date===td();}).length;var e=document.getElementById('ptcnt');if(e)e.textContent=n+(n===1?' Patient':' Patients');}
+function td(){return new Date().toLocaleDateString('en-GB');}
+function tn(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function nxt(){return pts.filter(function(p){return p.date===td();}).length+1;}
+function byId(id){for(var i=0;i<pts.length;i++)if(pts[i].id===id)return pts[i];return null;}
+function svL(){try{localStorage.setItem(KEY,JSON.stringify(pts));}catch(e){}}
+function ldL(){try{var s=localStorage.getItem(KEY);if(s)pts=JSON.parse(s);}catch(e){pts=[];}}
+
+// ── DATABASE: Google Sheets CSV (read) + Apps Script no-cors (write) ──
+var SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1tNoGKhb2NWIPVHWHtW1dkc0H2uAgWqFRaeAxXNMdRco/export?format=csv&gid=0&t=';
+var API = 'https://script.google.com/macros/s/AKfycbwEBMdGSixYWNeuM5X2aZxDeV_RIDCL8oDmXLqnFay6fPi9XoEjfHmBj0WWUdHE1azL/exec';
+
+function tryParse(v){try{return v?JSON.parse(v):null;}catch(e){return null;}}
+
+function csvToRows(csv){
+  var lines=csv.trim().split('\n');
+  var result=[];
+  for(var i=1;i<lines.length;i++){
+    var cols=[];var cur='';var inQ=false;
+    for(var j=0;j<lines[i].length;j++){
+      var ch=lines[i][j];
+      if(ch==='"'){inQ=!inQ;}
+      else if(ch===','&&!inQ){cols.push(cur);cur='';}
+      else{cur+=ch;}
+    }
+    cols.push(cur);
+    result.push(cols);
+  }
+  return result;
+}
+
+function rowToPatient(r){
+  if(!r[0])return null;
+  return {
+    id:String(r[0]),num:Number(r[1]),idNum:String(r[2]||''),
+    fn:String(r[3]||''),ln:String(r[4]||''),age:String(r[5]||''),
+    gender:String(r[6]||''),phone:String(r[7]||''),
+    province:String(r[8]||''),district:String(r[9]||''),
+    sector:String(r[10]||''),cell:String(r[11]||''),
+    service:String(r[12]||''),status:String(r[13]||''),
+    date:pd(r[14]),regAt:pt2(r[14]),
+    parentName:String(r[15]||''),parentPhone:String(r[16]||''),
+    vitals:tryParse(r[17])||{},labs:tryParse(r[18])||{},
+    consult:tryParse(r[19]),
+    rx:r[20]?String(r[20]).split('; ').filter(Boolean):[],
+    doneAt:r[21]?String(r[21]):null
+  };
+}
+
+function sync(){
+  // Read from public Google Sheet CSV - no CORS issues!
+  var x=new XMLHttpRequest();
+  x.open('GET',SHEET_CSV+Date.now(),true);
+  x.timeout=10000;
+  x.onreadystatechange=function(){
+    if(x.readyState!==4)return;
+    if(x.status===200&&x.responseText&&x.responseText.indexOf('ID')>=0){
+      try{
+        var rows=csvToRows(x.responseText);
+        var arr=[];
+        for(var i=0;i<rows.length;i++){var p=rowToPatient(rows[i]);if(p)arr.push(p);}
+        if(arr.length){pts=arr;svL();setSync('Synced ✓ ('+arr.length+')');render();updCnt();}
+        else{setSync('Ready');}
+      }catch(e){setSync('Ready');}
+    } else {
+      ldL();render();updCnt();
+    }
+  };
+  x.onerror=function(){ldL();render();updCnt();};
+  x.ontimeout=function(){ldL();render();updCnt();};
+  x.send();
+}
+
+function syncSilent(){
+  // Fetch data without re-rendering (used when form is being filled)
+  var x=new XMLHttpRequest();
+  x.open('GET',SHEET_CSV+Date.now(),true);
+  x.timeout=10000;
+  x.onreadystatechange=function(){
+    if(x.readyState!==4)return;
+    if(x.status===200&&x.responseText&&x.responseText.indexOf('ID')>=0){
+      try{
+        var rows=csvToRows(x.responseText);
+        var arr=[];
+        for(var i=0;i<rows.length;i++){var p=rowToPatient(rows[i]);if(p)arr.push(p);}
+        if(arr.length){pts=arr;svL();setSync('Synced ✓ ('+arr.length+')');}
+      }catch(e){}
+    }
+  };
+  x.onerror=function(){};
+  x.ontimeout=function(){};
+  x.send();
+}
+
+function push(cb){
+  setSync('Saving...');svL();
+  // Use XMLHttpRequest with proper CORS
+  var x=new XMLHttpRequest();
+  x.open('POST',API,true);
+  x.setRequestHeader('Content-Type','text/plain');
+  x.onreadystatechange=function(){
+    if(x.readyState===4){
+      setSync('Saved ✓');
+      if(cb)cb();
+    }
+  };
+  x.onerror=function(){setSync('Saved locally');if(cb)cb();};
+  x.ontimeout=function(){setSync('Saved locally');if(cb)cb();};
+  x.timeout=15000;
+  x.send(JSON.stringify({action:'save',patients:pts}));
+}
+
+function pd(v){if(!v)return td();var s=String(v);return s.indexOf('/')>0?s.split(' ')[0]:s.split('T')[0]||td();}
+function pt2(v){if(!v)return tn();var s=String(v),p=s.split(' ');return p.length>1?p[1]:tn();}
+
+function goStn(s){
+  cur=s;sv=null;
+  document.getElementById('pg_login').style.display='none';
+  var app=document.getElementById('pg_app');app.style.display='flex';app.style.flexDirection='column';app.style.minHeight='100vh';
+  var lbl={reception:'Reception',consultation:'Consultation',pharmacy:'Pharmacy',dashboard:'Dashboard'};
+  document.getElementById('stnlbl').textContent=lbl[s];
+  document.getElementById('srchbar').style.display=(s==='reception'||s==='consultation')?'flex':'none';
+  ldL();render();updCnt();
+  // Sync after 3 seconds to let the UI load first
+  setTimeout(function(){sync();},3000);
+  if(ptmr)clearInterval(ptmr);
+  ptmr=setInterval(function(){
+    // Only sync if user is not filling the registration form
+    var fn=document.getElementById('r_fn');
+    var formActive=fn&&(fn.value.trim().length>0);
+    if(!formActive) sync();
+    else {
+      // Just fetch data silently without re-rendering
+      syncSilent();
+    }
+  },10000);
+}
+function doExit(){if(ptmr)clearInterval(ptmr);cur=null;sv=null;document.getElementById('pg_app').style.display='none';document.getElementById('pg_login').style.display='flex';}
+function render(){if(cur==='reception')rRec();else if(cur==='consultation')rCon();else if(cur==='pharmacy')rPha();else if(cur==='dashboard')rDash();}
+
+function doSearch(q){
+  var out=document.getElementById('sres');if(!q){out.innerHTML='';return;}
+  q=q.toLowerCase();
+  var res=pts.filter(function(p){return(p.fn+' '+p.ln).toLowerCase().indexOf(q)>=0||String(p.num).indexOf(q)>=0||(p.idNum||'').toLowerCase().indexOf(q)>=0||(p.district||'').toLowerCase().indexOf(q)>=0;}).slice(0,6);
+  if(!res.length){out.innerHTML='<div style="padding:8px 15px;font-size:12px;color:#555;">No results</div>';return;}
+  var h='';
+  for(var i=0;i<res.length;i++){var p=res[i];h+='<div class="sri" onclick="vPt(\''+p.id+'\')"><div class="qn" style="background:'+svcBg(p.service)+';color:'+svcClr(p.service)+'">#'+p.num+'</div><div><div style="font-weight:700;font-size:12px;">'+p.fn+' '+p.ln+'</div><div style="font-size:10px;color:#555;">'+p.age+'yrs &middot; '+(p.district||'')+' &middot; '+p.service+'</div></div></div>';}
+  out.innerHTML=h;
+}
+function clrSearch(){document.getElementById('sinp').value='';document.getElementById('sres').innerHTML='';}
+
+function svcBg(s){
+  if(!s)return '#e8f0fb';
+  if(s.indexOf('+')>=0)return '#f0ebfa'; // combined
+  return s==='Eye Testing'?'#e8f0fb':s==='NCD Testing'?'#e8f4ed':s==='Children Under 5'?'#fdf3d8':'#e8f0fb';
+}
+function svcClr(s){
+  if(!s)return '#1a5c9a';
+  if(s.indexOf('+')>=0)return '#6b3fa0'; // combined
+  return s==='Eye Testing'?'#1a5c9a':s==='NCD Testing'?'#1a5c38':s==='Children Under 5'?'#c8920a':'#1a5c9a';
+}
+function sBdg(s){return'<span class="bdg" style="background:'+svcBg(s)+';color:'+svcClr(s)+';">'+s+'</span>';}
+function stBdg(s){var m={waiting:['#fff3e0','#e65100'],consultation:['#e8f0fb','#1a5c9a'],lab:['#fdf3d8','#c8920a'],pharmacy:['#f0ebfa','#6b3fa0'],done:['#f0f0f0','#888']};var c=m[s]||m.waiting;return'<span class="bdg" style="background:'+c[0]+';color:'+c[1]+';">'+s+'</span>';}
+
+// ════ RECEPTION ════════════════════════════════════════════════
+function rRec(){
+  var d=td(),tp=pts.filter(function(p){return p.date===d;}),w=0,ip=0,dn=0;
+  for(var i=0;i<tp.length;i++){if(tp[i].status==='waiting')w++;else if(tp[i].status==='done')dn++;else ip++;}
+  var qh=tp.length?'<div class="ql">'+tp.map(function(p){return'<div class="qi"><div class="qn" style="background:'+svcBg(p.service)+';color:'+svcClr(p.service)+'">#'+p.num+'</div><div class="qi-i"><div class="qi-n">'+p.fn+' '+p.ln+'</div><div class="qi-m">'+sBdg(p.service)+stBdg(p.status)+'</div></div><div class="qi-a"><button class="btn bX bsm" onclick="vPt(\''+p.id+'\')">View</button><button class="btn bO bsm" onclick="pCard(\''+p.id+'\')">Print</button></div></div>';}).join('')+'</div>':'<div class="emp"><div class="ei">&#128203;</div><div class="et">No patients yet</div></div>';
+  document.getElementById('maindiv').innerHTML=
+    '<div style="padding-bottom:36px;">'
+    +'<div class="stats"><div class="sc"><div class="snum">'+tp.length+'</div><div class="slbl">Total</div></div><div class="sc"><div class="snum" style="color:#c8920a;">'+w+'</div><div class="slbl">Waiting</div></div><div class="sc"><div class="snum" style="color:#1a5c9a;">'+ip+'</div><div class="slbl">Active</div></div><div class="sc"><div class="snum">'+dn+'</div><div class="slbl">Done</div></div></div>'
+    +'<div class="card"><h2>Register New Patient</h2><div class="sub">Fill all fields and select a service</div>'
+    +'<div class="g2"><div class="f"><label>First Name <span class="req">*</span></label><input type="text" id="r_fn" placeholder="First name"></div><div class="f"><label>Last Name <span class="req">*</span></label><input type="text" id="r_ln" placeholder="Last name"></div></div>'
+    +'<div class="g2"><div class="f"><label>ID Number</label><input type="text" id="r_id" placeholder="National ID / Passport"></div><div class="f"><label>Phone</label><input type="tel" id="r_ph" placeholder="07X XXX XXXX"></div></div>'
+    +'<div class="g2"><div class="f"><label>Age <span class="req">*</span></label><input type="number" id="r_ag" min="0" max="120" placeholder="Age"></div><div class="f"><label>Gender <span class="req">*</span></label><select id="r_gn"><option value="">-- Select --</option><option>Female</option><option>Male</option></select></div></div>'
+    +'<div id="r_child_extra" style="display:none;">'
+    +'<div class="section-divider">Parent / Guardian Information</div>'
+    +'<div class="g2"><div class="f"><label>Parent / Guardian Name <span class="req">*</span></label><input type="text" id="r_pname" placeholder="Mother / Father name"></div><div class="f"><label>Parent Phone <span class="req">*</span></label><input type="tel" id="r_pphone" placeholder="07X XXX XXXX"></div></div>'
+    +'</div>'
+    +'<div style="background:#e8f4ed;border-radius:8px;padding:10px;margin-bottom:10px;"><div style="font-size:10px;font-weight:800;color:#1a5c38;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;">Address</div>'
+    +'<div class="g2"><div class="f" style="margin-bottom:7px;"><label>Province <span class="req">*</span></label><select id="r_pv" onchange="upD()"><option value="">-- Province --</option></select></div><div class="f" style="margin-bottom:7px;"><label>District <span class="req">*</span></label><select id="r_dt" onchange="upS()" disabled><option value="">-- District --</option></select></div></div>'
+    +'<div class="g2"><div class="f" style="margin-bottom:0;"><label>Sector <span class="req">*</span></label><select id="r_st" onchange="upC()" disabled><option value="">-- Sector --</option></select></div><div class="f" style="margin-bottom:0;"><label>Cell <span class="req">*</span></label><select id="r_cl" disabled><option value="">-- Cell --</option></select></div></div></div>'
+    +'<div class="f"><label>Service <span class="req">*</span> <small style="font-weight:400;text-transform:none;color:#555;">(select one or more)</small></label>'
+    +'<div class="svcs">'
+    +'<div class="svc" id="sv_e" onclick="pickSv(\'e\')"><div class="si">&#128065;</div><div class="sn2">Eye Testing</div><div class="sd">Vision &amp; eye exam</div><div id="sv_e_ck" style="display:none;color:#1a5c9a;font-size:18px;margin-top:3px;">&#10003;</div></div>'
+    +'<div class="svc" id="sv_n" onclick="pickSv(\'n\')"><div class="si">&#129658;</div><div class="sn2">NCD Testing</div><div class="sd">BP, diabetes &amp; more</div><div id="sv_n_ck" style="display:none;color:#1a5c38;font-size:18px;margin-top:3px;">&#10003;</div></div>'
+    +'<div class="svc" id="sv_c" onclick="pickSv(\'c\')"><div class="si">&#128118;</div><div class="sn2">Children Under 5</div><div class="sd">Growth &amp; nutrition</div><div id="sv_c_ck" style="display:none;color:#c8920a;font-size:18px;margin-top:3px;">&#10003;</div></div>'
+    +'</div></div>'
+    +'<div id="r_al"></div>'
+    +'<button class="btn bG" onclick="regPt()">Register &amp; Send to Queue</button>'
+    +'</div>'
+    +'<div class="card"><div class="sh sh-g"><h3>Queue ('+tp.length+')</h3><span>'+d+'</span></div>'+qh+'</div>'
+    +'</div>';
+  fillPv();
+  document.getElementById('r_ag').addEventListener('input',function(){
+    var age=parseInt(this.value)||0;
+    var showChild=svArr.indexOf('c')>=0||age<5;
+    document.getElementById('r_child_extra').style.display=showChild?'block':'none';
+  });
+}
+
+function fillPv(){var s=document.getElementById('r_pv');if(!s)return;s.innerHTML='<option value="">-- Province --</option>';Object.keys(RW).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;s.appendChild(o);});}
+function upD(){var pv=document.getElementById('r_pv').value,d=document.getElementById('r_dt'),s=document.getElementById('r_st'),c=document.getElementById('r_cl');d.innerHTML='<option value="">-- District --</option>';s.innerHTML='<option value="">-- Sector --</option>';c.innerHTML='<option value="">-- Cell --</option>';d.disabled=!pv;s.disabled=true;c.disabled=true;if(pv&&RW[pv])Object.keys(RW[pv]).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;d.appendChild(o);});}
+function upS(){var pv=document.getElementById('r_pv').value,dv=document.getElementById('r_dt').value,s=document.getElementById('r_st'),c=document.getElementById('r_cl');s.innerHTML='<option value="">-- Sector --</option>';c.innerHTML='<option value="">-- Cell --</option>';s.disabled=!dv;c.disabled=true;if(pv&&dv&&RW[pv]&&RW[pv][dv])Object.keys(RW[pv][dv]).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;s.appendChild(o);});}
+function upC(){var pv=document.getElementById('r_pv').value,dv=document.getElementById('r_dt').value,sv2=document.getElementById('r_st').value,c=document.getElementById('r_cl');c.innerHTML='<option value="">-- Cell --</option>';c.disabled=!sv2;if(pv&&dv&&sv2&&RW[pv]&&RW[pv][dv]&&RW[pv][dv][sv2])RW[pv][dv][sv2].forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;c.appendChild(o);});}
+// Multi-select services
+var svArr=[];
+function pickSv(s){
+  var i=svArr.indexOf(s);
+  if(i>=0){ svArr.splice(i,1); } else { svArr.push(s); }
+  var names={e:'EY',n:'NC',c:'CH'};
+  var keys=['e','n','c'];
+  for(var ki=0;ki<keys.length;ki++){
+    var kk=keys[ki];
+    var el=document.getElementById('sv_'+kk);
+    var ck=document.getElementById('sv_'+kk+'_ck');
+    if(el){
+      if(svArr.indexOf(kk)>=0){ el.className='svc '+names[kk]; if(ck)ck.style.display='block'; }
+      else { el.className='svc'; if(ck)ck.style.display='none'; }
+    }
+  }
+  var age=parseInt(document.getElementById('r_ag').value)||0;
+  var showChild=svArr.indexOf('c')>=0||age<5;
+  var ce=document.getElementById('r_child_extra');
+  if(ce)ce.style.display=showChild?'block':'none';
+}
+
+function regPt(){
+  var fn=document.getElementById('r_fn').value.trim(),ln=document.getElementById('r_ln').value.trim();
+  var idNum=document.getElementById('r_id').value.trim();
+  var ag=document.getElementById('r_ag').value.trim(),gn=document.getElementById('r_gn').value,ph=document.getElementById('r_ph').value.trim();
+  var pv=document.getElementById('r_pv').value,dt=document.getElementById('r_dt').value,st=document.getElementById('r_st').value,cl=document.getElementById('r_cl').value;
+  var al=document.getElementById('r_al');
+  var pName='',pPhone='';
+  if(sv==='c'||parseInt(ag)<5){pName=document.getElementById('r_pname').value.trim();pPhone=document.getElementById('r_pphone').value.trim();}
+  if(!fn||!ln||!ag||!gn||svArr.length===0||!pv||!dt||!st||!cl){al.className='al aER';al.textContent='Please fill all required fields and select at least one service.';return;}
+  if((svArr.indexOf('c')>=0||parseInt(ag)<5)&&(!pName||!pPhone)){al.className='al aER';al.textContent='Please fill parent/guardian name and phone.';return;}
+  var svcName=svArr.map(function(s){return s==='e'?'Eye Testing':s==='n'?'NCD Testing':'Children Under 5';}).join(' + ');
+  var p={id:Date.now().toString(),num:nxt(),idNum:idNum,fn:fn,ln:ln,age:ag,gender:gn,phone:ph,service:svcName,province:pv,district:dt,sector:st,cell:cl,status:'waiting',date:td(),regAt:tn(),parentName:pName,parentPhone:pPhone,vitals:{},labs:{},consult:null,rx:[],doneAt:null};
+  pts.push(p);al.className='al aOK';al.textContent='Saving #'+p.num+'...';svArr=[];
+  push(function(){al.className='al aOK';al.textContent='Patient #'+p.num+' '+fn+' '+ln+' saved!';rRec();setTimeout(function(){var a=document.getElementById('r_al');if(a){a.className='al aOK';a.textContent='Patient #'+p.num+' registered!';}},80);});
+}
+
+// ════ CONSULTATION ══════════════════════════════════════════════
+function rCon(){
+  var d=td();
+  var w=pts.filter(function(p){return p.date===d&&p.status==='waiting';});
+  var ic=pts.filter(function(p){return p.date===d&&p.status==='consultation';});
+  var lb=pts.filter(function(p){return p.date===d&&p.status==='lab';});
+  var tot=pts.filter(function(p){return p.date===d;});
+  var wh=w.length?'<div class="ql">'+w.map(function(p){return'<div class="qi"><div class="qn" style="background:'+svcBg(p.service)+';color:'+svcClr(p.service)+'">#'+p.num+'</div><div class="qi-i"><div class="qi-n">'+p.fn+' '+p.ln+'</div><div class="qi-m">'+sBdg(p.service)+'<span>'+p.age+'yrs</span><span>'+(p.district||'')+'</span></div></div><div class="qi-a"><button class="btn bB bsm" onclick="callIn(\''+p.id+'\')">Call In</button><button class="btn bX bsm" onclick="vPt(\''+p.id+'\')">View</button></div></div>';}).join('')+'</div>':'<div class="emp"><div class="ei">&#9989;</div><div class="et">No patients waiting</div></div>';
+  var ich=ic.length?'<div class="card"><div class="sh sh-b"><h3>In Consultation ('+ic.length+')</h3></div><div class="ql">'+ic.map(function(p){return'<div class="qi"><div class="qn" style="background:'+svcBg(p.service)+';color:'+svcClr(p.service)+'">#'+p.num+'</div><div class="qi-i"><div class="qi-n">'+p.fn+' '+p.ln+'</div><div class="qi-m">'+sBdg(p.service)+'</div></div><button class="btn bG bsm" onclick="oCon(\''+p.id+'\')">Complete</button></div>';}).join('')+'</div></div>':'';
+  var lbh=lb.length?'<div class="card"><div class="sh sh-o"><h3>Lab Results Pending ('+lb.length+')</h3></div><div class="ql">'+lb.map(function(p){return'<div class="qi"><div class="qn" style="background:#fdf3d8;color:#c8920a;">#'+p.num+'</div><div class="qi-i"><div class="qi-n">'+p.fn+' '+p.ln+'</div><div class="qi-m">'+sBdg(p.service)+'<span style="color:#c8920a;font-weight:700;">Awaiting lab results</span></div></div><button class="btn bO bsm" onclick="oLab(\''+p.id+'\')">Enter Results</button></div>';}).join('')+'</div></div>':'';
+  document.getElementById('maindiv').innerHTML=
+    '<div style="padding-bottom:36px;">'
+    +'<div class="stats"><div class="sc"><div class="snum" style="color:#c8920a;">'+w.length+'</div><div class="slbl">Waiting</div></div><div class="sc"><div class="snum" style="color:#1a5c9a;">'+ic.length+'</div><div class="slbl">In Consult</div></div><div class="sc"><div class="snum" style="color:#c8920a;">'+lb.length+'</div><div class="slbl">Lab Pending</div></div><div class="sc"><div class="snum">'+tot.filter(function(p){return p.status==='done';}).length+'</div><div class="slbl">Done</div></div></div>'
+    +'<div class="card"><div class="sh sh-b"><h3>Waiting ('+w.length+')</h3></div>'+wh+'</div>'
+    +lbh+ich+'</div>';
+}
+
+function callIn(id){var p=byId(id);if(!p)return;p.status='consultation';p.consultAt=tn();push(function(){rCon();oCon(id);});}
+
+function oCon(id){
+  var p=byId(id);if(!p)return;
+  var eye=p.service.indexOf('Eye Testing')>=0,ncd=p.service.indexOf('NCD Testing')>=0,child=p.service.indexOf('Children Under 5')>=0;
+  var v=p.vitals||{},c=p.consult||{};
+
+  // Vital signs section
+  var vitHtml='<div class="sh sh-b"><h3>Vital Signs</h3></div>'
+    +'<div class="vitrow"><label>Temperature (&deg;C)</label><input type="number" step="0.1" id="v_temp" value="'+(v.temp||'')+'" placeholder="e.g. 37.0"></div>'
+    +'<div class="vitrow"><label>Pulse (bpm)</label><input type="number" id="v_pulse" value="'+(v.pulse||'')+'" placeholder="e.g. 72"></div>'
+    +'<div class="vitrow"><label>BP Systolic (mmHg)</label><input type="number" id="v_bps" value="'+(v.bpS||'')+'" placeholder="e.g. 120"></div>'
+    +'<div class="vitrow"><label>BP Diastolic (mmHg)</label><input type="number" id="v_bpd" value="'+(v.bpD||'')+'" placeholder="e.g. 80"></div>'
+    +'<div class="vitrow"><label>O2 Saturation (%)</label><input type="number" id="v_o2" value="'+(v.o2||'')+'" placeholder="e.g. 98"></div>'
+    +'<div class="vitrow"><label>Weight (kg)</label><input type="number" step="0.1" id="v_wt" value="'+(v.wt||'')+'" placeholder="e.g. 65"></div>'
+    +'<div class="vitrow"><label>Height (cm)</label><input type="number" step="0.1" id="v_ht" value="'+(v.ht||'')+'" placeholder="e.g. 165"></div>';
+
+  // Service-specific exam
+  var examHtml='';
+  if(eye){
+    examHtml+='<div class="sh sh-b" style="margin-top:11px;"><h3>Eye Examination</h3></div>'
+      +'<div class="g2"><div class="f"><label>VA Right Eye (OD)</label><select id="c_od"><option value="">--</option><option>6/6 Normal</option><option>6/9 Mild</option><option>6/12 Moderate</option><option>6/18 Moderate</option><option>6/24 Severe</option><option>6/36 Severe</option><option>6/60 Severe</option><option>CF Count Fingers</option><option>HM Hand Motion</option><option>LP Light Perception</option><option>NLP No Light Perception</option></select></div>'
+      +'<div class="f"><label>VA Left Eye (OS)</label><select id="c_os"><option value="">--</option><option>6/6 Normal</option><option>6/9 Mild</option><option>6/12 Moderate</option><option>6/18 Moderate</option><option>6/24 Severe</option><option>6/36 Severe</option><option>6/60 Severe</option><option>CF Count Fingers</option><option>HM Hand Motion</option><option>LP Light Perception</option><option>NLP No Light Perception</option></select></div></div>'
+      +'<div class="f"><label>Eye Diagnosis</label><select id="c_dg"><option value="">--</option><option>Normal</option><option>Refractive Error</option><option>Cataract</option><option>Glaucoma suspected</option><option>Diabetic Retinopathy</option><option>Conjunctivitis</option><option>Dry Eye</option><option>Night Blindness</option><option>Pterygium</option><option>Referral needed</option><option>Other</option></select></div>'
+      +'<div class="f"><label>Glasses Needed?</label><select id="c_gl"><option value="">--</option><option>No glasses needed</option><option>Yes - Distance</option><option>Yes - Reading</option><option>Yes - Bifocals</option></select></div>';
+  } if(ncd){
+    examHtml+='<div class="sh sh-g" style="margin-top:11px;"><h3>NCD Examination</h3></div>'
+      +'<div class="g2"><div class="f"><label>Blood Sugar (mg/dL)</label><input type="number" id="c_sg" placeholder="e.g. 90"></div><div class="f"><label>BMI (auto or manual)</label><input type="number" step="0.1" id="c_bmi" placeholder="Calculated"></div></div>'
+      +'<div class="f"><label>Diagnosis</label><select id="c_dg"><option value="">--</option><option>Normal</option><option>Hypertension Stage 1</option><option>Hypertension Stage 2</option><option>Hypertension - Urgent referral</option><option>Pre-diabetes</option><option>Diabetes Type 2</option><option>Overweight / Obesity</option><option>Multiple conditions</option><option>Referral needed</option><option>Other</option></select></div>';
+  } if(child){
+    examHtml+='<div class="sh sh-o" style="margin-top:11px;"><h3>Child Assessment (Under 5)</h3></div>'
+      +'<div class="g2"><div class="f"><label>MUAC (cm)</label><input type="number" step="0.1" id="c_muac" placeholder="e.g. 13.5"></div><div class="f"><label>Length/Height (cm)</label><input type="number" step="0.1" id="c_len" placeholder="e.g. 85"></div></div>'
+      +'<div class="g2"><div class="f"><label>Nutritional Status</label><select id="c_nutr"><option value="">--</option><option>Normal / Well-nourished</option><option>Mild Malnutrition (MAM)</option><option>Moderate Acute Malnutrition (MAM)</option><option>Severe Acute Malnutrition (SAM)</option><option>Overweight</option><option>Stunting</option></select></div>'
+      +'<div class="f"><label>Breastfeeding?</label><select id="c_bf"><option value="">--</option><option>Yes - Exclusively breastfed</option><option>Yes - Mixed feeding</option><option>No - Stopped</option><option>Never breastfed</option></select></div></div>'
+      +'<div class="f"><label>Immunization Status</label><select id="c_imm"><option value="">--</option><option>Up to date</option><option>Incomplete</option><option>Not vaccinated</option><option>Unknown</option></select></div>'
+      +'<div class="g2"><div class="f"><label>Developmental Milestones</label><select id="c_dev"><option value="">--</option><option>Age appropriate</option><option>Slight delay</option><option>Moderate delay</option><option>Significant delay - refer</option></select></div>'
+      +'<div class="f"><label>Deworming (last 6mo)?</label><select id="c_dew"><option value="">--</option><option>Yes</option><option>No</option><option>Unknown</option></select></div></div>'
+      +'<div class="f"><label>Diagnosis / Notes</label><select id="c_dg"><option value="">--</option><option>Normal growth</option><option>Underweight</option><option>Stunting</option><option>Wasting</option><option>SAM - urgent referral</option><option>MAM - therapeutic feeding</option><option>Nutritional counseling needed</option><option>Referral to hospital</option><option>Other</option></select></div>';
+  }
+
+  // Lab section
+  var labHtml='<div class="sh sh-o" style="margin-top:11px;"><h3>Laboratory Examinations</h3></div>'
+    +'<div style="background:#fdf3d8;border-radius:8px;padding:10px;margin-bottom:10px;">'
+    +'<div class="labrow"><label>Malaria RDT</label><select id="l_mal"><option value="">Not done</option><option>Negative</option><option>Positive - P.falciparum</option><option>Positive - P.vivax</option><option>Positive - Mixed</option></select></div>'
+    +'<div class="labrow"><label>Blood Glucose (mg/dL)</label><input type="number" id="l_glu" placeholder="Result"></div>'
+    +'<div class="labrow"><label>Hemoglobin (g/dL)</label><input type="number" step="0.1" id="l_hgb" placeholder="Result"></div>'
+    +'<div class="labrow"><label>HIV Test</label><select id="l_hiv"><option value="">Not done</option><option>Non-reactive (Negative)</option><option>Reactive (Positive)</option><option>Indeterminate</option></select></div>'
+    +'<div class="labrow"><label>Urine Test</label><select id="l_uri"><option value="">Not done</option><option>Normal</option><option>Protein +</option><option>Protein ++</option><option>Glucose +</option><option>Infection suspected</option></select></div>'
+    +'<div class="labrow"><label>Stool Test</label><select id="l_sto"><option value="">Not done</option><option>Normal</option><option>Parasites found</option><option>Blood in stool</option></select></div>'
+    +'<div class="labrow"><label>Pregnancy Test</label><select id="l_prg"><option value="">Not done</option><option>Negative</option><option>Positive</option></select></div>'
+    +'</div>';
+
+  // Treatment section
+  var treatHtml='<div class="sh sh-r" style="margin-top:11px;"><h3>Treatment Plan</h3></div>'
+    +'<div class="f"><label>Clinical Notes &amp; Findings</label><textarea id="c_nt" placeholder="Clinical observations, referral notes..."></textarea></div>'
+    +'<div class="f"><label>Medications / Prescription</label><div id="rxl"></div><button class="btn bX bsm" onclick="addRx()" style="margin-top:5px;">+ Add Medication</button></div>'
+    +'<div class="f"><label>Next Step</label><select id="c_tp"><option value="pharmacy">Send to Pharmacy</option><option value="done">Discharge directly (no pharmacy)</option></select></div>';
+
+  document.getElementById('mbody').innerHTML=
+    '<div class="mt">Consultation - '+p.fn+' '+p.ln+' (#'+p.num+')</div>'
+    +'<div class="dc dcG"><h4 style="color:#1a5c38;">Patient</h4>'
+    +'<div class="dr"><span>Name</span><span>'+p.fn+' '+p.ln+'</span></div>'
+    +'<div class="dr"><span>Age / Gender</span><span>'+p.age+'yrs / '+p.gender+'</span></div>'
+    +(p.idNum?'<div class="dr"><span>ID Number</span><span>'+p.idNum+'</span></div>':'')
+    +'<div class="dr"><span>District</span><span>'+(p.district||'-')+'</span></div>'
+    +'<div class="dr"><span>Service</span><span style="color:'+svcClr(p.service)+'">'+p.service+'</span></div>'
+    +(p.parentName?'<div class="dr"><span>Parent/Guardian</span><span>'+p.parentName+' &middot; '+p.parentPhone+'</span></div>':'')
+    +'</div>'
+    +vitHtml+examHtml+labHtml+treatHtml
+    +'<div class="g2" style="margin-top:10px;"><button class="btn bG" style="width:100%;padding:11px;" onclick="doneCon(\''+p.id+'\')">Complete &amp; Send &rarr;</button><button class="btn bX" style="width:100%;padding:11px;" onclick="closeMo()">Cancel</button></div>';
+  document.getElementById('modal').className='mo show';
+
+  // Pre-fill existing lab/consult values if coming back from lab
+  if(p.labs){var l=p.labs;['mal','glu','hgb','hiv','uri','sto','prg'].forEach(function(k){var el=document.getElementById('l_'+k);if(el&&l[k])el.value=l[k];});}
+  if(p.vitals){var vv=p.vitals;['temp','pulse','bps','bpd','o2','wt','ht'].forEach(function(k){var el=document.getElementById('v_'+k.replace('bps','bps').replace('bpd','bpd'));if(el&&vv[k])el.value=vv[k];});}
+}
+
+function addRx(){var l=document.getElementById('rxl');var d=document.createElement('div');d.className='rx';d.innerHTML='<input type="text" placeholder="Medication, dosage, frequency..."><button class="rxd" onclick="this.parentElement.remove()">x</button>';l.appendChild(d);}
+
+function doneCon(id){
+  var p=byId(id);if(!p)return;
+  var eye=p.service.indexOf('Eye Testing')>=0,ncd=p.service.indexOf('NCD Testing')>=0,child=p.service.indexOf('Children Under 5')>=0;
+  var toStep=document.getElementById('c_tp').value;
+  var rx=[],els=document.querySelectorAll('#rxl .rx input');for(var i=0;i<els.length;i++)if(els[i].value)rx.push(els[i].value);
+
+  // Collect vitals
+  p.vitals={temp:gv('v_temp'),pulse:gv('v_pulse'),bpS:gv('v_bps'),bpD:gv('v_bpd'),o2:gv('v_o2'),wt:gv('v_wt'),ht:gv('v_ht')};
+
+  // Collect labs
+  p.labs={mal:gv('l_mal'),glu:gv('l_glu'),hgb:gv('l_hgb'),hiv:gv('l_hiv'),uri:gv('l_uri'),sto:gv('l_sto'),prg:gv('l_prg')};
+
+  // Collect exam findings
+  p.consult={at:tn(),notes:gv('c_nt'),diag:gv('c_dg')};
+  if(eye){p.consult.vaOD=gv('c_od');p.consult.vaOS=gv('c_os');p.consult.glasses=gv('c_gl');}
+  else if(ncd){p.consult.sugar=gv('c_sg');p.consult.bmi=gv('c_bmi');}
+  else if(child){p.consult.muac=gv('c_muac');p.consult.length=gv('c_len');p.consult.nutrition=gv('c_nutr');p.consult.breastfeeding=gv('c_bf');p.consult.immunization=gv('c_imm');p.consult.development=gv('c_dev');p.consult.deworming=gv('c_dew');}
+
+  p.rx=rx;
+  p.status=toStep==='pharmacy'?'pharmacy':'done';
+  if(toStep==='done')p.doneAt=tn();
+  push(function(){closeMo();rCon();});
+}
+
+function gv(id){var el=document.getElementById(id);return el?el.value:'';}
+
+// Lab results modal (when patient returns from lab)
+function oLab(id){
+  var p=byId(id);if(!p)return;
+  var l=p.labs||{};
+  document.getElementById('mbody').innerHTML=
+    '<div class="mt">&#128300; Lab Results - '+p.fn+' '+p.ln+'</div>'
+    +'<div class="dc dcO"><h4 style="color:#c8920a;">Enter Laboratory Results</h4>'
+    +'<div class="labrow"><label>Malaria RDT</label><select id="l_mal"><option value="">Not done</option><option>Negative</option><option>Positive - P.falciparum</option><option>Positive - P.vivax</option><option>Positive - Mixed</option></select></div>'
+    +'<div class="labrow"><label>Blood Glucose (mg/dL)</label><input type="number" id="l_glu" placeholder="Result" value="'+(l.glu||'')+'"></div>'
+    +'<div class="labrow"><label>Hemoglobin (g/dL)</label><input type="number" step="0.1" id="l_hgb" placeholder="Result" value="'+(l.hgb||'')+'"></div>'
+    +'<div class="labrow"><label>HIV Test</label><select id="l_hiv"><option value="">Not done</option><option>Non-reactive (Negative)</option><option>Reactive (Positive)</option><option>Indeterminate</option></select></div>'
+    +'<div class="labrow"><label>Urine Test</label><select id="l_uri"><option value="">Not done</option><option>Normal</option><option>Protein +</option><option>Protein ++</option><option>Glucose +</option><option>Infection suspected</option></select></div>'
+    +'<div class="labrow"><label>Stool Test</label><select id="l_sto"><option value="">Not done</option><option>Normal</option><option>Parasites found</option><option>Blood in stool</option></select></div>'
+    +'<div class="labrow"><label>Pregnancy Test</label><select id="l_prg"><option value="">Not done</option><option>Negative</option><option>Positive</option></select></div>'
+    +'</div>'
+    +'<div class="g2" style="margin-top:10px;"><button class="btn bO" style="width:100%;padding:11px;" onclick="saveLabAndReturn(\''+id+'\')">Save &amp; Return to Consultation</button><button class="btn bX" style="width:100%;padding:11px;" onclick="closeMo()">Cancel</button></div>';
+  document.getElementById('modal').className='mo show';
+  // Pre-fill existing values
+  if(l.mal){var el=document.getElementById('l_mal');if(el)el.value=l.mal;}
+  if(l.hiv){var el=document.getElementById('l_hiv');if(el)el.value=l.hiv;}
+  if(l.uri){var el=document.getElementById('l_uri');if(el)el.value=l.uri;}
+  if(l.sto){var el=document.getElementById('l_sto');if(el)el.value=l.sto;}
+  if(l.prg){var el=document.getElementById('l_prg');if(el)el.value=l.prg;}
+}
+
+function saveLabAndReturn(id){
+  var p=byId(id);if(!p)return;
+  p.labs={mal:gv('l_mal'),glu:gv('l_glu'),hgb:gv('l_hgb'),hiv:gv('l_hiv'),uri:gv('l_uri'),sto:gv('l_sto'),prg:gv('l_prg')};
+  p.status='consultation';
+  push(function(){closeMo();rCon();oCon(id);});
+}
+
+// ════ PHARMACY ══════════════════════════════════════════════════
+function rPha(){
+  var d=td(),w=pts.filter(function(p){return p.date===d&&p.status==='pharmacy';}),dn=pts.filter(function(p){return p.date===d&&p.status==='done';});
+  var wh=w.length?'<div class="ql">'+w.map(function(p){return'<div class="qi"><div class="qn" style="background:'+svcBg(p.service)+';color:'+svcClr(p.service)+'">#'+p.num+'</div><div class="qi-i"><div class="qi-n">'+p.fn+' '+p.ln+'</div><div class="qi-m">'+sBdg(p.service)+(p.rx&&p.rx.length?'<span style="color:#6b3fa0;font-weight:700;">'+p.rx.length+' med(s)</span>':'')+'</div></div><div class="qi-a"><button class="btn bP bsm" onclick="oPha(\''+p.id+'\')">Dispense</button><button class="btn bO bsm" onclick="pCard(\''+p.id+'\')">Print</button></div></div>';}).join('')+'</div>':'<div class="emp"><div class="ei">&#128138;</div><div class="et">No patients waiting</div></div>';
+  var dh=dn.length?'<div class="card"><div class="sh sh-gr"><h3>Done Today ('+dn.length+')</h3></div><div class="ql">'+dn.slice(-8).reverse().map(function(p){return'<div class="qi" style="opacity:.75;"><div class="qn" style="background:#eee;color:#888;">#'+p.num+'</div><div class="qi-i"><div class="qi-n">'+p.fn+' '+p.ln+'</div><div class="qi-m">'+sBdg(p.service)+'<span class="bdg" style="background:#eee;color:#888;">Done</span></div></div><div class="qi-a"><button class="btn bX bsm" onclick="vPt(\''+p.id+'\')">View</button><button class="btn bO bsm" onclick="pCard(\''+p.id+'\')">Print</button></div></div>';}).join('')+'</div></div>':'';
+  document.getElementById('maindiv').innerHTML=
+    '<div style="padding-bottom:36px;">'
+    +'<div class="stats"><div class="sc"><div class="snum" style="color:#6b3fa0;">'+w.length+'</div><div class="slbl">Waiting</div></div><div class="sc"><div class="snum">'+dn.length+'</div><div class="slbl">Discharged</div></div><div class="sc"><div class="snum">'+pts.filter(function(p){return p.date===d&&p.service==='Eye Testing'&&p.status==='done';}).length+'</div><div class="slbl">Eye Done</div></div><div class="sc"><div class="snum" style="color:#1a5c9a;">'+pts.filter(function(p){return p.date===d&&p.service==='NCD Testing'&&p.status==='done';}).length+'</div><div class="slbl">NCD Done</div></div></div>'
+    +'<div class="card"><div class="sh sh-p"><h3>Waiting for Pharmacy ('+w.length+')</h3></div>'+wh+'</div>'
+    +dh+'</div>';
+}
+
+function oPha(id){
+  var p=byId(id);if(!p)return;var c=p.consult||{},v=p.vitals||{},l=p.labs||{},eye=p.service.indexOf('Eye Testing')>=0,child=p.service.indexOf('Children Under 5')>=0;
+  var labSummary='';
+  var labEntries=[['Malaria',l.mal],['Blood Glucose',l.glu?l.glu+' mg/dL':''],['Hemoglobin',l.hgb?l.hgb+' g/dL':''],['HIV',l.hiv],['Urine',l.uri],['Stool',l.sto],['Pregnancy',l.prg]];
+  labEntries.forEach(function(e){if(e[1])labSummary+='<div class="dr"><span>'+e[0]+'</span><span>'+e[1]+'</span></div>';});
+  var vSummary='';
+  if(v.temp)vSummary+='<div class="dr"><span>Temp</span><span>'+v.temp+'&deg;C</span></div>';
+  if(v.bpS)vSummary+='<div class="dr"><span>BP</span><span>'+v.bpS+'/'+v.bpD+' mmHg</span></div>';
+  if(v.pulse)vSummary+='<div class="dr"><span>Pulse</span><span>'+v.pulse+' bpm</span></div>';
+  if(v.wt)vSummary+='<div class="dr"><span>Weight</span><span>'+v.wt+' kg</span></div>';
+  var rh=p.rx&&p.rx.length?p.rx.map(function(r,i){return'<div style="background:#fafafa;border:1px solid #ddd;border-radius:7px;padding:7px 10px;margin-bottom:5px;display:flex;gap:7px;align-items:center;"><span style="background:#f0ebfa;color:#6b3fa0;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex-shrink:0;">'+(i+1)+'</span><span style="font-size:12px;font-weight:600;flex:1;">'+r+'</span><input type="checkbox" style="width:16px;height:16px;margin-left:auto;"></div>';}).join(''):'<div style="background:#e8f4ed;border-radius:7px;padding:9px;margin-bottom:9px;font-size:12px;color:#1a5c38;font-weight:600;">No medications prescribed.</div>';
+  document.getElementById('mbody').innerHTML=
+    '<div class="mt">Pharmacy - '+p.fn+' '+p.ln+' (#'+p.num+')</div>'
+    +(vSummary?'<div class="dc dcB"><h4 style="color:#1a5c9a;">Vital Signs</h4>'+vSummary+'</div>':'')
+    +'<div class="dc dcG"><h4 style="color:#1a5c38;">Diagnosis</h4><div class="dr"><span>Diagnosis</span><span style="color:#1a5c38;">'+(c.diag||'Not recorded')+'</span></div>'
+    +(eye?'<div class="dr"><span>VA OD/OS</span><span>'+(c.vaOD||'-')+'/'+(c.vaOS||'-')+'</span></div>':'')
+    +(child?'<div class="dr"><span>Nutrition</span><span>'+(c.nutrition||'-')+'</span></div><div class="dr"><span>MUAC</span><span>'+(c.muac||'-')+' cm</span></div>':'')
+    +(c.notes?'<div class="dr"><span>Notes</span><span>'+c.notes+'</span></div>':'')+'</div>'
+    +(labSummary?'<div class="dc dcO"><h4 style="color:#c8920a;">Lab Results</h4>'+labSummary+'</div>':'')
+    +'<div class="sh sh-p"><h3>Medications to Dispense</h3></div>'+rh
+    +'<div class="f"><label>Pharmacist Notes</label><textarea id="ph_n" placeholder="Dispensing notes, counseling..."></textarea></div>'
+    +'<div class="g2" style="margin-top:9px;"><button class="btn bP" style="width:100%;padding:11px;" onclick="disch(\''+id+'\')">Discharge Patient &#10003;</button><button class="btn bX" style="width:100%;padding:11px;" onclick="closeMo()">Cancel</button></div>';
+  document.getElementById('modal').className='mo show';
+}
+
+function disch(id){var p=byId(id);if(!p)return;p.status='done';p.doneAt=tn();p.pharm={at:tn(),notes:document.getElementById('ph_n').value};push(function(){closeMo();rPha();var t=document.createElement('div');t.className='toast';t.innerHTML='<div style="font-size:40px;">&#9989;</div><div style="font-size:16px;font-weight:800;color:#1a5c38;margin:8px 0 4px;">Discharged!</div><div style="font-size:13px;color:#555;">'+p.fn+' '+p.ln+'</div><button onclick="this.parentElement.remove()" style="margin-top:12px;background:#1a5c38;color:#fff;border:none;padding:8px 20px;border-radius:7px;font-weight:700;cursor:pointer;">OK</button>';document.body.appendChild(t);setTimeout(function(){if(t.parentElement)t.remove();},3000);});}
+
+// ════ DASHBOARD ══════════════════════════════════════════════════
+function rDash(){
+  var d=td(),tp=pts.filter(function(p){return p.date===d;});
+  var eye=tp.filter(function(p){return p.service==='Eye Testing';}),ncd=tp.filter(function(p){return p.service==='NCD Testing';}),ch=tp.filter(function(p){return p.service==='Children Under 5';});
+  var dn=tp.filter(function(p){return p.status==='done';}),w=tp.filter(function(p){return p.status==='waiting';});
+  var fem=tp.filter(function(p){return p.gender==='Female';}),mal2=tp.filter(function(p){return p.gender==='Male';});
+  var tot=tp.length||1;
+  var dC={};tp.forEach(function(p){if(p.consult&&p.consult.diag)dC[p.consult.diag]=(dC[p.consult.diag]||0)+1;});
+  var tD=Object.entries(dC).sort(function(a,b){return b[1]-a[1];}).slice(0,5);var mD=tD.length?tD[0][1]:1;
+  var dstC={};tp.forEach(function(p){if(p.district)dstC[p.district]=(dstC[p.district]||0)+1;});
+  var tDst=Object.entries(dstC).sort(function(a,b){return b[1]-a[1];}).slice(0,5);var mDst=tDst.length?tDst[0][1]:1;
+  var ag={'0-4':0,'5-17':0,'18-35':0,'36-50':0,'51+':0};tp.forEach(function(p){var a=parseInt(p.age)||0;if(a<5)ag['0-4']++;else if(a<18)ag['5-17']++;else if(a<36)ag['18-35']++;else if(a<51)ag['36-50']++;else ag['51+']++;});
+  var mA=1;Object.values(ag).forEach(function(v){if(v>mA)mA=v;});
+  var tr=tp.length?tp.map(function(p,i){return'<tr style="border-bottom:1px solid #eee;'+(i%2?'background:#fafafa':'')+'">'+'<td style="padding:5px 8px;font-weight:700;">#'+p.num+'</td><td style="padding:5px 8px;">'+p.fn+' '+p.ln+'</td><td style="padding:5px 8px;">'+p.age+'</td><td style="padding:5px 8px;">'+(p.idNum||'-')+'</td><td style="padding:5px 8px;">'+(p.district||'-')+'</td><td style="padding:5px 8px;">'+sBdg(p.service)+'</td><td style="padding:5px 8px;">'+(p.consult&&p.consult.diag?p.consult.diag.substr(0,20):'-')+'</td><td style="padding:5px 8px;">'+stBdg(p.status)+' <button class="btn bX" style="padding:2px 7px;font-size:10px;" onclick="vPt(\''+p.id+'\')">View</button></td></tr>';}).join(''):'<tr><td colspan="8" style="text-align:center;padding:18px;color:#555;">No patients today</td></tr>';
+  document.getElementById('maindiv').innerHTML=
+    '<div style="padding-bottom:36px;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;flex-wrap:wrap;gap:6px;"><div><div style="font-size:16px;font-weight:800;">Dashboard</div><div style="font-size:11px;color:#555;">'+d+'</div></div>'
+    +'<div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn bG bsm" onclick="exCSV()">Export CSV</button><button class="btn bO bsm" onclick="exXLS()">Export Excel</button><button class="btn bsm" style="color:#b5221e;border:1.5px solid #b5221e;background:transparent;" onclick="clrTd()">Clear Today</button></div></div>'
+    +'<div class="stats"><div class="sc"><div class="snum">'+tp.length+'</div><div class="slbl">Total</div></div><div class="sc"><div class="snum" style="color:#1a5c9a;">'+eye.length+'</div><div class="slbl">Eye</div></div><div class="sc"><div class="snum" style="color:#1a5c38;">'+ncd.length+'</div><div class="slbl">NCD</div></div><div class="sc"><div class="snum" style="color:#c8920a;">'+ch.length+'</div><div class="slbl">Child U5</div></div></div>'
+    +'<div class="stats"><div class="sc"><div class="snum" style="color:#c8920a;">'+w.length+'</div><div class="slbl">Waiting</div></div><div class="sc"><div class="snum">'+dn.length+'</div><div class="slbl">Done</div></div><div class="sc"><div class="snum">'+fem.length+'</div><div class="slbl">Female</div></div><div class="sc"><div class="snum" style="color:#1a5c9a;">'+mal2.length+'</div><div class="slbl">Male</div></div></div>'
+    +'<div class="ch"><div class="cb"><div class="ct">Top Diagnoses</div>'+(tD.length?'<div class="bw">'+tD.map(function(e){return'<div class="brow"><div class="blbl">'+(e[0].length>9?e[0].substr(0,9)+'..':e[0])+'</div><div class="bbar"><div class="bfil" style="width:'+Math.round(e[1]/mD*100)+'%;background:#1a5c38;"></div></div><div class="bval">'+e[1]+'</div></div>';}).join('')+'</div>':'<div style="font-size:11px;color:#555;padding:11px;text-align:center;">No data</div>')+'</div>'
+    +'<div class="cb"><div class="ct">Age Groups</div><div class="bw">'+Object.entries(ag).map(function(e){return'<div class="brow"><div class="blbl">'+e[0]+'</div><div class="bbar"><div class="bfil" style="width:'+Math.round(e[1]/mA*100)+'%;background:#1a5c9a;"></div></div><div class="bval">'+e[1]+'</div></div>';}).join('')+'</div></div></div>'
+    +'<div class="ch"><div class="cb"><div class="ct">Services</div><div class="bw"><div class="brow"><div class="blbl">Eye</div><div class="bbar"><div class="bfil" style="width:'+Math.round(eye.length/tot*100)+'%;background:#1a5c9a;"></div></div><div class="bval">'+eye.length+'</div></div><div class="brow"><div class="blbl">NCD</div><div class="bbar"><div class="bfil" style="width:'+Math.round(ncd.length/tot*100)+'%;background:#1a5c38;"></div></div><div class="bval">'+ncd.length+'</div></div><div class="brow"><div class="blbl">Child U5</div><div class="bbar"><div class="bfil" style="width:'+Math.round(ch.length/tot*100)+'%;background:#c8920a;"></div></div><div class="bval">'+ch.length+'</div></div></div></div>'
+    +'<div class="cb"><div class="ct">Top Districts</div>'+(tDst.length?'<div class="bw">'+tDst.map(function(e){return'<div class="brow"><div class="blbl">'+e[0]+'</div><div class="bbar"><div class="bfil" style="width:'+Math.round(e[1]/mDst*100)+'%;background:#c8920a;"></div></div><div class="bval">'+e[1]+'</div></div>';}).join('')+'</div>':'<div style="font-size:11px;color:#555;padding:11px;text-align:center;">No data</div>')+'</div></div>'
+    +'<div class="card"><div class="sh sh-g"><h3>All Patients ('+tp.length+')</h3></div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:#e8f4ed;"><th style="padding:5px 8px;text-align:left;font-size:9px;color:#1a5c38;">#</th><th style="padding:5px 8px;text-align:left;font-size:9px;color:#1a5c38;">Name</th><th style="padding:5px 8px;text-align:left;font-size:9px;color:#1a5c38;">Age</th><th style="padding:5px 8px;text-align:left;font-size:9px;color:#1a5c38;">ID</th><th style="padding:5px 8px;text-align:left;font-size:9px;color:#1a5c38;">District</th><th style="padding:5px 8px;text-align:left;font-size:9px;color:#1a5c38;">Service</th><th style="padding:5px 8px;text-align:left;font-size:9px;color:#1a5c38;">Diagnosis</th><th style="padding:5px 8px;text-align:left;font-size:9px;color:#1a5c38;">Status</th></tr></thead><tbody>'+tr+'</tbody></table></div></div>'
+    +'</div>';
+}
+
+function exCSV(){var d=td(),data=pts.filter(function(p){return p.date===d;});if(!data.length){alert('No patients');return;}var h=['#','ID','First','Last','Age','Gender','Phone','Province','District','Sector','Cell','Service','Status','Date','Parent','Temp','BP','Pulse','Weight','Malaria','Glucose','Hemoglobin','HIV','Urine','Diagnosis','Prescription','Notes','Completed'];var rows=data.map(function(p){var v=p.vitals||{},l=p.labs||{},c=p.consult||{};return[p.num,p.idNum||'',p.fn,p.ln,p.age,p.gender,p.phone||'',p.province||'',p.district||'',p.sector||'',p.cell||'',p.service,p.status,p.date,p.parentName||'',v.temp||'',v.bpS&&v.bpD?v.bpS+'/'+v.bpD+' mmHg':'',v.pulse||'',v.wt||'',l.mal||'',l.glu||'',l.hgb||'',l.hiv||'',l.uri||'',c.diag||'',(p.rx||[]).join('; '),c.notes||'',p.doneAt||''].map(function(v2){return'"'+String(v2).replace(/"/g,'""')+'"';}).join(',');});dlF([h.join(',')].concat(rows).join('\n'),'RRWO_'+d.replace(/\//g,'-')+'.csv','text/csv');}
+function exXLS(){var d=td(),data=pts.filter(function(p){return p.date===d;});if(!data.length){alert('No patients');return;}var h=['#','ID','Name','Age','Gender','District','Service','Status','Diagnosis','BP','Malaria','Glucose','Completed'];var rows=data.map(function(p){var v=p.vitals||{},l=p.labs||{},c=p.consult||{};return[p.num,p.idNum||'',p.fn+' '+p.ln,p.age,p.gender,p.district||'',p.service,p.status,c.diag||'',v.bpS&&v.bpD?v.bpS+'/'+v.bpD:'',l.mal||'',l.glu||'',p.doneAt||''];});dlF('<html><head><meta charset="UTF-8"></head><body><table><tr>'+h.map(function(x){return'<th style="background:#1a5c38;color:#fff;">'+x+'</th>';}).join('')+'</tr>'+rows.map(function(r,i){return'<tr style="'+(i%2?'background:#f5f5f5':'')+'">'+ r.map(function(v2){return'<td>'+v2+'</td>';}).join('')+'</tr>';}).join('')+'</table></body></html>','RRWO_'+d.replace(/\//g,'-')+'.xls','application/vnd.ms-excel');}
+function dlF(c,n,t){var b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=n;a.click();setTimeout(function(){URL.revokeObjectURL(u);},1000);}
+function clrTd(){if(!confirm('Clear all today\'s data?'))return;var d2=td();pts=pts.filter(function(p){return p.date!==d2;});push(function(){rDash();updCnt();});}
+
+function vPt(id){
+  var p=byId(id);if(!p)return;var c=p.consult||{},v=p.vitals||{},l=p.labs||{},eye=p.service.indexOf('Eye Testing')>=0,child=p.service.indexOf('Children Under 5')>=0;
+  var labHtml='';
+  [['Malaria',l.mal],['Blood Glucose',l.glu?l.glu+' mg/dL':''],['Hemoglobin',l.hgb?l.hgb+' g/dL':''],['HIV',l.hiv],['Urine',l.uri],['Stool',l.sto],['Pregnancy',l.prg]].forEach(function(e){if(e[1])labHtml+='<div class="dr"><span>'+e[0]+'</span><span>'+e[1]+'</span></div>';});
+  document.getElementById('mbody').innerHTML=
+    '<div class="mt">Patient #'+p.num+'</div>'
+    +'<div class="dc dcG"><h4 style="color:#1a5c38;">Personal</h4>'
+    +'<div class="dr"><span>Name</span><span>'+p.fn+' '+p.ln+'</span></div>'
+    +'<div class="dr"><span>Age / Gender</span><span>'+p.age+'yrs / '+p.gender+'</span></div>'
+    +(p.idNum?'<div class="dr"><span>ID Number</span><span>'+p.idNum+'</span></div>':'')
+    +'<div class="dr"><span>Phone</span><span>'+(p.phone||'-')+'</span></div>'
+    +'<div class="dr"><span>Province</span><span>'+(p.province||'-')+'</span></div>'
+    +'<div class="dr"><span>District / Sector</span><span>'+(p.district||'-')+' / '+(p.sector||'-')+'</span></div>'
+    +(p.parentName?'<div class="dr"><span>Parent</span><span>'+p.parentName+' / '+p.parentPhone+'</span></div>':'')
+    +'<div class="dr"><span>Service</span><span>'+p.service+'</span></div>'
+    +'<div class="dr"><span>Status</span><span>'+stBdg(p.status)+'</span></div></div>'
+    +((v.temp||v.bpS||v.pulse)?'<div class="dc dcB"><h4 style="color:#1a5c9a;">Vital Signs</h4>'+(v.temp?'<div class="dr"><span>Temperature</span><span>'+v.temp+'&deg;C</span></div>':'')+(v.bpS?'<div class="dr"><span>Blood Pressure</span><span>'+v.bpS+'/'+v.bpD+' mmHg</span></div>':'')+(v.pulse?'<div class="dr"><span>Pulse</span><span>'+v.pulse+' bpm</span></div>':'')+(v.o2?'<div class="dr"><span>O2 Sat</span><span>'+v.o2+'%</span></div>':'')+(v.wt?'<div class="dr"><span>Weight</span><span>'+v.wt+' kg</span></div>':'')+(v.ht?'<div class="dr"><span>Height</span><span>'+v.ht+' cm</span></div>':'')+'</div>':'')
+    +(c.diag?'<div class="dc dcG"><h4 style="color:#1a5c38;">Clinical Findings</h4><div class="dr"><span>Diagnosis</span><span style="color:#1a5c38;">'+c.diag+'</span></div>'+(eye?'<div class="dr"><span>VA OD/OS</span><span>'+(c.vaOD||'-')+'/'+(c.vaOS||'-')+'</span></div>':'')+(child?'<div class="dr"><span>Nutrition</span><span>'+(c.nutrition||'-')+'</span></div><div class="dr"><span>MUAC</span><span>'+(c.muac||'-')+' cm</span></div><div class="dr"><span>Breastfeeding</span><span>'+(c.breastfeeding||'-')+'</span></div><div class="dr"><span>Immunization</span><span>'+(c.immunization||'-')+'</span></div>':'')+(c.notes?'<div class="dr"><span>Notes</span><span>'+c.notes+'</span></div>':'')+'</div>':'')
+    +(labHtml?'<div class="dc dcO"><h4 style="color:#c8920a;">Lab Results</h4>'+labHtml+'</div>':'')
+    +(p.rx&&p.rx.length?'<div class="dc dcP"><h4 style="color:#6b3fa0;">Prescription</h4>'+p.rx.map(function(r,i){return'<div class="dr"><span>Rx '+(i+1)+'</span><span>'+r+'</span></div>';}).join('')+'</div>':'')
+    +'<div class="g2" style="margin-top:9px;"><button class="btn bO" style="width:100%;padding:10px;" onclick="pCard(\''+id+'\');closeMo()">Print Card</button><button class="btn bX" style="width:100%;padding:10px;" onclick="closeMo()">Close</button></div>';
+  document.getElementById('modal').className='mo show';
+}
+
+function pCard(id){
+  var p=byId(id);if(!p)return;var c=p.consult||{},v=p.vitals||{},l=p.labs||{},eye=p.service.indexOf('Eye Testing')>=0,child=p.service.indexOf('Children Under 5')>=0;
+  var w=window.open('','_blank','width=420,height=680');
+  var labLines='';[['Malaria',l.mal],['Blood Glucose',l.glu?l.glu+' mg/dL':''],['Hemoglobin',l.hgb?l.hgb+' g/dL':''],['HIV',l.hiv],['Urine',l.uri]].forEach(function(e){if(e[1])labLines+='<div class="row"><span>'+e[0]+'</span><span>'+e[1]+'</span></div>';});
+  var h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>#'+p.num+'</title>'
+    +'<style>body{font-family:Arial,sans-serif;padding:15px;font-size:12px;}.hd{text-align:center;border-bottom:3px solid #1a5c38;padding-bottom:8px;margin-bottom:10px;}.org{font-size:13px;font-weight:800;color:#1a5c38;}.num{font-size:22px;font-weight:900;color:#1a5c38;margin:4px 0 0;}.svc{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;margin-top:2px;}.sec{font-size:9px;font-weight:800;color:#888;text-transform:uppercase;margin:8px 0 3px;border-bottom:1px solid #eee;padding-bottom:2px;}.row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #f5f5f5;font-size:11px;}.row span:first-child{color:#666;font-weight:600;}.row span:last-child{font-weight:700;}.ft{margin-top:14px;text-align:center;font-size:9px;color:#888;border-top:2px solid #1a5c38;padding-top:6px;}.stripe{height:4px;background:linear-gradient(to right,#1a5c38,#c8920a,#b5221e);margin-bottom:11px;}</style>'
+    +'</head><body><div class="stripe"></div>'
+    +'<div class="hd"><div class="org">Rasira Rwanda Women Organization</div><div style="font-size:9px;color:#555;">RRWO Campaign 2025</div><div class="num">#'+p.num+'</div><div class="svc" style="background:'+svcBg(p.service)+';color:'+svcClr(p.service)+';">'+p.service+'</div></div>'
+    +'<div class="sec">Patient</div>'
+    +'<div class="row"><span>Name</span><span>'+p.fn+' '+p.ln+'</span></div>'
+    +'<div class="row"><span>Age / Gender</span><span>'+p.age+'yrs / '+p.gender+'</span></div>'
+    +(p.idNum?'<div class="row"><span>ID Number</span><span>'+p.idNum+'</span></div>':'')
+    +(p.parentName?'<div class="row"><span>Parent</span><span>'+p.parentName+'</span></div>':'')
+    +'<div class="row"><span>District</span><span>'+(p.district||'-')+'</span></div>'
+    +'<div class="row"><span>Date</span><span>'+p.date+'</span></div>'
+    +(v.temp||v.bpS?'<div class="sec">Vital Signs</div>'+(v.temp?'<div class="row"><span>Temp</span><span>'+v.temp+'&deg;C</span></div>':'')+(v.bpS?'<div class="row"><span>BP</span><span>'+v.bpS+'/'+v.bpD+' mmHg</span></div>':'')+(v.pulse?'<div class="row"><span>Pulse</span><span>'+v.pulse+' bpm</span></div>':'')+(v.wt?'<div class="row"><span>Weight</span><span>'+v.wt+' kg</span></div>':''):'')
+    +(labLines?'<div class="sec">Lab Results</div>'+labLines:'')
+    +(c.diag?'<div class="sec">Diagnosis &amp; Treatment</div><div class="row"><span>Diagnosis</span><span>'+c.diag+'</span></div>'+(eye?'<div class="row"><span>VA OD/OS</span><span>'+(c.vaOD||'-')+'/'+(c.vaOS||'-')+'</span></div>':'')+(child?'<div class="row"><span>Nutrition</span><span>'+(c.nutrition||'-')+'</span></div><div class="row"><span>MUAC</span><span>'+(c.muac||'-')+' cm</span></div>':'')+(c.notes?'<div class="row"><span>Notes</span><span>'+c.notes+'</span></div>':''):'')
+    +(p.rx&&p.rx.length?'<div class="sec">Prescription</div>'+p.rx.map(function(r,i){return'<div class="row"><span>Rx '+(i+1)+'</span><span>'+r+'</span></div>';}).join(''):'')
+    +'<div class="ft">rasirarwanda.org &middot; +250 787 094 096 &middot; info@rasirarwanda.org</div>'
+    +'<scr'+'ipt>window.onload=function(){window.print();window.close();};<'+'/scr'+'ipt></body></html>';
+  w.document.write(h);w.document.close();
+}
+
+function closeMo(){document.getElementById('modal').className='mo';}
+
+</script>
+</body></html>
