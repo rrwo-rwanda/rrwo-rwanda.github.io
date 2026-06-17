@@ -485,8 +485,10 @@ function sync(){
     if(s!==200)return;
     var rows=Array.isArray(d)?d:[];
     var sids=rows.map(function(r){return r.id;});
-    var unsaved=pts.filter(function(p){return sids.indexOf(p.id)<0&&p._unsaved;});
-    pts=rows.map(fromRow).concat(unsaved);
+    // Keep ALL local patients not yet confirmed by server - prevents data loss
+    // during the gap between registration and successful DB save
+    var localOnly=pts.filter(function(p){return sids.indexOf(p.id)<0;});
+    pts=rows.map(fromRow).concat(localOnly);
     pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
     svL();updCnt();
     sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
@@ -505,9 +507,9 @@ function syncS(){
     if(s!==200)return;
     var rows=Array.isArray(d)?d:[];
     var sids=rows.map(function(r){return r.id;});
-    var unsaved=pts.filter(function(p){return sids.indexOf(p.id)<0&&p._unsaved;});
-    var other=pts.filter(function(p){return p.date!==today&&sids.indexOf(p.id)<0;});
-    pts=rows.map(fromRow).concat(unsaved).concat(other);
+    // Keep all local patients not yet in server (today or other days)
+    var localOnly=pts.filter(function(p){return sids.indexOf(p.id)<0;});
+    pts=rows.map(fromRow).concat(localOnly);
     pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
     svL();updCnt();
   });
