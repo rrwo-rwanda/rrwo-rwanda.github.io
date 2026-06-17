@@ -481,15 +481,22 @@ function sync(){
       var rows=Array.isArray(d)?d:[];
       var serverIds=rows.map(function(r){return r.id;});
       var unsaved=pts.filter(function(p){return serverIds.indexOf(p.id)<0&&p._unsaved;});
-      pts=rows.map(fromRow).concat(unsaved);
-      pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
+      var newPts=rows.map(fromRow).concat(unsaved);
+      newPts.sort(function(a,b){return(a.num||0)-(b.num||0);});
+      // Check if data changed
+      var oldSig=pts.map(function(p){return p.id+p.status;}).join('');
+      var newSig=newPts.map(function(p){return p.id+p.status;}).join('');
+      pts=newPts;
       svL(); updCnt();
-      // fetch pending from previous days silently
+      // If data changed, silently update only the stat numbers on screen
+      // without rebuilding the full patient list (no flicker)
+      if(oldSig!==newSig){ softUpdate(); }
+      // fetch pending from previous days
       sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
         if(s2===200&&Array.isArray(d2)&&d2.length){
           var existIds=pts.map(function(p){return p.id;});
           var extra=d2.map(fromRow).filter(function(p){return existIds.indexOf(p.id)<0;});
-          if(extra.length){pts=pts.concat(extra);pts.sort(function(a,b){return(a.num||0)-(b.num||0);});svL();updCnt();}
+          if(extra.length){pts=pts.concat(extra);pts.sort(function(a,b){return(a.num||0)-(b.num||0);});svL();updCnt();softUpdate();}
         }
       });
     } else {
@@ -512,6 +519,27 @@ function syncS(){
     }
   });
 }
+
+// Update only the stat number cards without rebuilding the full screen
+function softUpdate(){
+  var d=td();
+  var tp=pts.filter(function(p){return p.date===d;});
+  // Update each stat card number in place
+  var cards=document.querySelectorAll('.sc .snum');
+  if(!cards.length)return;
+  // Update patient count badge in topbar
+  updCnt();
+  // Re-render just the stats row by calling render() only if user is idle
+  // Use a flag to avoid re-render during active user interaction
+  if(!softUpdate._busy){
+    softUpdate._busy=true;
+    requestAnimationFrame(function(){
+      render();
+      softUpdate._busy=false;
+    });
+  }
+}
+softUpdate._busy=false;
 function savePt(p,cb){
   svL();
   var row=toRow(p);
