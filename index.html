@@ -816,23 +816,27 @@ function regPt(){
 // &#9472;&#9472; TRIAGE &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function rTriage(){
   var d=td();
+  // Sort waiting by num (FIFO - first registered = first in list)
   var w=pts.filter(function(p){return p.status==='waiting'&&p.service!=='Children Under 5';});
+  w.sort(function(a,b){return(a.num||0)-(b.num||0);});
   var ic=pts.filter(function(p){return p.status==='triage';});
   var wh=w.length?'<div class="ql">'+w.map(function(p){
     var c=svcC(p.service);
     var isOld=p.date!==d;
     return '<div class="qi" style="'+(isOld?'border-color:#C8201A;background:#FFF5F5;':'')+'">'
       +'<div class="qn" style="background:'+c.bg+';color:'+c.fg+';">#'+p.num+'</div>'
-      +'<div class="qinfo"><div class="qname">'+p.fn+' '+p.ln+'</div>'
-      +'<div class="qmeta">'+sBdg(p.service)+' '+p.age+'yrs'+(isOld?' &middot; <span style="color:#C8201A;font-weight:700;">From '+p.date+'</span>':'')+'</div></div>'
+      +'<div class="qinfo"><div class="qname" style="font-size:15px;font-weight:800;">'+p.fn+' '+p.ln+'</div>'
+      +'<div class="qmeta">'+sBdg(p.service)+' &middot; '+p.age+'yrs &middot; '+p.gender+(isOld?' &middot; <span style="color:#C8201A;font-weight:700;">From '+tdDisp(p.date)+'</span>':'')+'</div></div>'
       +'<div class="qbtns">'
       +'<button class="btn bT bsm" data-action="callTriage" data-pid="'+p.id+'">Call In</button>'
       +'<button class="btn bX bsm" data-action="vPt" data-pid="'+p.id+'">View</button>'
       +'</div></div>';
   }).join('')+'</div>':'<div class="emp"><div style="font-size:32px;margin-bottom:8px;">&#9989;</div><div>No patients waiting</div></div>';
-  var ih=ic.length?'<div class="card"><div class="sh shT"><h3>In Triage</h3></div><div class="ql">'+ic.map(function(p){
-    return '<div class="qi"><div class="qn" style="background:#E0F2F1;color:#00695C;">#'+p.num+'</div>'
-      +'<div class="qinfo"><div class="qname">'+p.fn+' '+p.ln+'</div></div>'
+  var ih=ic.length?'<div class="card" style="margin-top:12px;"><div class="sh shT"><h3>Currently In Triage ('+ic.length+')</h3></div><div class="ql">'+ic.map(function(p){
+    return '<div class="qi">'
+      +'<div class="qn" style="background:#E0F2F1;color:#00695C;">#'+p.num+'</div>'
+      +'<div class="qinfo"><div class="qname">'+p.fn+' '+p.ln+'</div>'
+      +'<div class="qmeta">'+p.age+'yrs &middot; '+p.gender+'</div></div>'
       +'<button class="btn bG bsm" data-action="openTriage" data-pid="'+p.id+'">Complete</button>'
       +'</div>';
   }).join('')+'</div></div>':'';
@@ -843,7 +847,7 @@ function rTriage(){
     +sc(pts.filter(function(p){return p.date===d&&p.status==='done';}).length,'Done Today',null,'done-today')
     +sc(w.filter(function(p){return p.date!==d;}).length,'Prev Days','#C8201A','waiting-triage')
     +'</div>'
-    +'<div class="card"><div class="sh shT"><h3>Waiting for Triage ('+w.length+')</h3></div>'+wh+'</div>'+ih;
+    +'<div class="card"><div class="sh shT"><h3>&#128203; Waiting for Triage ('+w.length+') &mdash; First Come First Served</h3></div>'+wh+'</div>'+ih;
 }
 
 function callTriage(id){
@@ -859,9 +863,9 @@ function openTriage(id){
   var hasNcd=p.service.indexOf('NCD')>=0;
   var isMulti=hasEye&&hasNcd;
   var nxt='';
-  if(hasNcd) nxt+='<option value="ncd-consult">&rarr; NCD Consultation</option>';
-  else if(hasEye) nxt+='<option value="eye-consult">&rarr; Eye Consultation</option>';
-  nxt+='<option value="done">&rarr; Discharge (normal results)</option>';
+  if(hasNcd) nxt+='<option value="ncd-consult">&#129658; Send to NCD Consultation</option>';
+  if(hasEye) nxt+='<option value="eye-consult">&#128065; Send to Eye Testing</option>';
+  nxt+='<option value="done">&#9989; Discharge (normal results)</option>';
   openMo('<div class="mt">&#129658; Triage &#8212; '+p.fn+' '+p.ln+' #'+p.num+'</div>'
     +flowH(p)
     +'<div class="dc dcG"><h4>Patient</h4>'
@@ -889,19 +893,21 @@ function openTriage(id){
 function doneTriage(id){
   var p=byId(id);if(!p)return;
   p.triage={at:tn(),temp:gv('t_temp'),bpS:gv('t_bps'),bpD:gv('t_bpd'),glucose:gv('t_glu'),weight:gv('t_wt'),height:gv('t_ht')};
-  p.status=gv('t_next');
+  var next=gv('t_next');
   var hasEye=p.service.indexOf('Eye')>=0;
   var hasNcd=p.service.indexOf('NCD')>=0;
-  // Always NCD first if patient has both services
-  if(hasNcd&&hasEye){
-    p.consultOrder=['ncd-consult','eye-consult'];
+  // Build consult order based on nurse choice
+  if(next==='ncd-consult'){
+    p.consultOrder=hasEye?['ncd-consult','eye-consult']:['ncd-consult'];
     p.status='ncd-consult';
-  } else if(hasNcd){
-    p.consultOrder=['ncd-consult'];
-  } else if(hasEye){
+  } else if(next==='eye-consult'){
     p.consultOrder=['eye-consult'];
+    p.status='eye-consult';
+  } else {
+    // Discharge
+    p.status='done';
+    p.doneAt=tn();
   }
-  if(p.status==='done')p.doneAt=tn();
   savePt(p,function(){closeMo();requestAnimationFrame(rTriage);});
 }
 
