@@ -475,7 +475,7 @@ function fromRow(r){
 }
 
 function sync(){
-  var today=td();
+  var today=td(); // silent background sync - no UI changes
   sbReq('GET','patients?visit_date=eq.'+today+'&order=num.asc&limit=1000',null,function(s,d){
     if(s===200){
       var rows=Array.isArray(d)?d:[];
@@ -485,14 +485,14 @@ function sync(){
       pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
       svL();
       updCnt();
-      sSet('Ready ('+pts.length+')');
+      updCnt();
       sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
         if(s2===200){
           var rows2=Array.isArray(d2)?d2:[];
           if(rows2.length){
             var existIds=pts.map(function(p){return p.id;});
             var extra=rows2.map(fromRow).filter(function(p){return existIds.indexOf(p.id)<0;});
-            if(extra.length){pts=pts.concat(extra);pts.sort(function(a,b){return(a.num||0)-(b.num||0);});svL();updCnt();sSet('Ready ('+pts.length+')');}
+            if(extra.length){pts=pts.concat(extra);pts.sort(function(a,b){return(a.num||0)-(b.num||0);});svL();updCnt();updCnt();}
           }
         }
       });
@@ -511,52 +511,33 @@ function syncS(){
       var otherDays=pts.filter(function(p){return p.date!==today&&serverIds.indexOf(p.id)<0;});
       pts=rows.map(fromRow).concat(unsaved).concat(otherDays);
       pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-      svL();updCnt();sSet('Ready ('+pts.length+')');
+      svL();updCnt();updCnt();
     }
   });
 }
 
 function savePt(p,cb){
   svL();
-  sSet('Saving...');
   var row=toRow(p);
-  var SBU=SB+'/rest/v1/patients';
-  var hdrs={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'};
-  function req(method,path,body,done){
+  var base=SB+'/rest/v1/patients';
+  var h={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'};
+  function go(method,url,body,next){
     var x=new XMLHttpRequest();
-    x.open(method,SBU+(path||''),true);
-    Object.keys(hdrs).forEach(function(k){x.setRequestHeader(k,hdrs[k]);});
+    x.open(method,url,true);
+    Object.keys(h).forEach(function(k){x.setRequestHeader(k,h[k]);});
     x.timeout=10000;
-    x.onreadystatechange=function(){if(x.readyState===4)done(x.status,x.responseText);};
-    x.onerror=x.ontimeout=function(){done(0,'');};
+    x.onreadystatechange=function(){if(x.readyState===4)next(x.status);};
+    x.onerror=x.ontimeout=function(){next(0);};
     x.send(body?JSON.stringify(body):null);
   }
-  // Step 1: Try to UPDATE existing row
-  req('PATCH','?id=eq.'+p.id,row,function(s,r){
+  // Try PATCH first (update). If nothing updated, try POST (insert).
+  go('PATCH',base+'?id=eq.'+p.id,row,function(s){
     if(s===200||s===204){
-      // Check if any row was actually updated (Supabase returns empty [] if no match)
-      // PATCH 200 with empty means row didn't exist - need to INSERT
-      req('GET','?id=eq.'+p.id+'&select=id',null,function(s2,r2){
-        try{
-          var exists=JSON.parse(r2);
-          if(exists&&exists.length>0){
-            sSet('Saved');svL();if(cb)cb();
-          } else {
-            // Row doesn't exist - INSERT
-            req('POST','',row,function(s3,r3){
-              if(s3===200||s3===201){sSet('Saved');svL();}
-              else{sSet('Local only');console.error('INSERT failed',s3,r3);}
-              if(cb)cb();
-            });
-          }
-        }catch(e){sSet('Saved');svL();if(cb)cb();}
-      });
+      svL();if(cb)cb();
     } else {
-      // PATCH failed - try INSERT
-      req('POST','',row,function(s2,r2){
-        if(s2===200||s2===201){sSet('Saved');svL();}
-        else{sSet('Local only');console.error('Save failed',s2,r2);}
-        if(cb)cb();
+      go('POST',base,[row],function(s2){
+        svL();if(cb)cb();
+        if(s2!==200&&s2!==201)console.warn('Save warn',s2);
       });
     }
   });
@@ -579,7 +560,7 @@ function goStn(s){
   tmr=setInterval(function(){
     if(cur==='reception'){var fn=document.getElementById('r_fn');if(fn&&fn.value.trim())syncS();else sync();}
     else sync();
-  },15000);
+  },30000);
 }
 function doExit(){
   if(tmr)clearInterval(tmr);
