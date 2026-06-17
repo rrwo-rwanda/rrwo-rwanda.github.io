@@ -572,14 +572,6 @@ function savePt(p,cb){
   };
   x.send(JSON.stringify([row]));
 }
-},8000);
-            },300);
-          }
-        }
-      });
-    }
-  });
-}
 savePt._warnShown=false;
 
 // &#9472;&#9472; NAV &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -1301,7 +1293,7 @@ function openNcd(id,isEdit){
     +(isEdit?'<div class="f"><label>Send Patient To</label><select id="n_reroute">'
       +'<option value="keep">&#8212; Keep current location &#8212;</option>'
       +'<option value="pharmacy">&#128138; Send to Pharmacy</option>'
-      +(p.service.indexOf('Eye')>=0&&!p.eyeConsult?'<option value="eye-consult">&#128065; Eye Consultation</option>':'')'
+      +(p.service.indexOf('Eye')>=0&&!p.eyeConsult?'<option value="eye-consult">&#128065; Eye Consultation</option>':'')
       +'<option value="done">&#9989; Discharge</option>'
       +'</select></div>':'')
     +'<div class="g2" style="margin-top:10px;">'
