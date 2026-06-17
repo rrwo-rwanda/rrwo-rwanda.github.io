@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Rasira RWO System</title>
 <style>
@@ -1761,7 +1761,7 @@ function expXLS(){
   var h=['#','Name','Age','DOB','Gender','District','Date','Service','Status','BP','Glucose','Weight','Eye Diag','NCD Diag','Prescription','Done'];
   var rows=data.map(function(p){var t=p.triage||{},e=p.eyeConsult||{},n=p.ncdConsult||{},c=p.childConsult||{};return[p.num,p.fn+' '+p.ln,p.age,p.dob||'',p.gender,p.district||'',p.date,p.service,p.status,t.bpS&&t.bpD?t.bpS+'/'+t.bpD:'',t.glucose||'',t.weight||'',e.diagnosis||'',n.diagnosis||c.diagnosis||'',(p.rx||[]).join('; '),p.doneAt||''];});
   var fname='RasiraRWO_'+(fFrom===fTo?fFrom:fFrom+'_to_'+fTo).replace(/\//g,'-')+'.xls';
-  dlF('<html><head><meta charset="UTF-8"></head><body><table><tr>'+h.map(function(x){return'<th style="background:#1A6B2A;color:#fff;padding:6px;">'+x+'</th>';}).join('')+'</tr>'+rows.map(function(r,i){return'<tr style="'+(i%2?'background:#f5f5f5':'')+'">'+r.map(function(v){return'<td style="padding:5px;">'+v+'</td>';}).join('')+'</tr>';}).join('')+'</table></body></html>',fname,'application/vnd.ms-excel');
+  dlF('<html><head><meta charset="UTF-8"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"></head><body><table><tr>'+h.map(function(x){return'<th style="background:#1A6B2A;color:#fff;padding:6px;">'+x+'</th>';}).join('')+'</tr>'+rows.map(function(r,i){return'<tr style="'+(i%2?'background:#f5f5f5':'')+'">'+r.map(function(v){return'<td style="padding:5px;">'+v+'</td>';}).join('')+'</tr>';}).join('')+'</table></body></html>',fname,'application/vnd.ms-excel');
 }
 
 function expReport(){
@@ -1832,7 +1832,7 @@ function expReport(){
       +'</tr>';
   }).join('');
 
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rasira RWO &#8212; Report '+periodLabel+'</title>'
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>Rasira RWO &#8212; Report '+periodLabel+'</title>'
   +'<style>'
   +'*{margin:0;padding:0;box-sizing:border-box;}'
   +'body{font-family:Arial,sans-serif;font-size:12px;color:#222;background:#fff;padding:20px;}'
@@ -2051,7 +2051,7 @@ function pCard(id){
   var t=p.triage||{},e=p.eyeConsult||{},n=p.ncdConsult||{},c=p.childConsult||{};
   var w=window.open('','_blank','width=420,height:680');
   if(!w){alert('Please allow popups to print.');return;}
-  var h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Card #'+p.num+'</title><style>body{font-family:Arial,sans-serif;padding:16px;font-size:12px;}.hd{text-align:center;border-bottom:3px solid #1A6B2A;padding-bottom:8px;margin-bottom:10px;}.org{font-size:13px;font-weight:800;color:#1A6B2A;}.num{font-size:22px;font-weight:900;color:#1A6B2A;}.sec{font-size:9px;font-weight:800;color:#888;text-transform:uppercase;margin:8px 0 3px;border-bottom:1px solid #eee;}.row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f5f5f5;font-size:11px;}.row span:first-child{color:#666;font-weight:600;}.row span:last-child{font-weight:700;}.ft{margin-top:12px;text-align:center;font-size:9px;color:#888;border-top:2px solid #1A6B2A;padding-top:6px;}.stripe{height:4px;background:linear-gradient(to right,#1A6B2A,#E8A020,#C8201A);margin-bottom:10px;}</style></head><body>'
+  var h='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>Card #'+p.num+'</title><style>body{font-family:Arial,sans-serif;padding:16px;font-size:12px;}.hd{text-align:center;border-bottom:3px solid #1A6B2A;padding-bottom:8px;margin-bottom:10px;}.org{font-size:13px;font-weight:800;color:#1A6B2A;}.num{font-size:22px;font-weight:900;color:#1A6B2A;}.sec{font-size:9px;font-weight:800;color:#888;text-transform:uppercase;margin:8px 0 3px;border-bottom:1px solid #eee;}.row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f5f5f5;font-size:11px;}.row span:first-child{color:#666;font-weight:600;}.row span:last-child{font-weight:700;}.ft{margin-top:12px;text-align:center;font-size:9px;color:#888;border-top:2px solid #1A6B2A;padding-top:6px;}.stripe{height:4px;background:linear-gradient(to right,#1A6B2A,#E8A020,#C8201A);margin-bottom:10px;}</style></head><body>'
     +'<div class="stripe"></div><div class="hd"><div class="org">Rasira Rwanda Women Organization</div><div class="org" style="font-size:11px;font-weight:600;">Rasira RWO System</div><div class="num">#'+p.num+'</div><span style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;background:#E8F5E9;color:#1A6B2A;">'+p.service+'</span></div>'
     +'<div class="sec">Patient</div><div class="row"><span>Name</span><span>'+p.fn+' '+p.ln+'</span></div><div class="row"><span>DOB</span><span>'+fmtDob(p.dob)+'</span></div><div class="row"><span>Age/Gender</span><span>'+p.age+'yrs / '+p.gender+'</span></div>'+(p.idNum?'<div class="row"><span>ID</span><span>'+p.idNum+'</span></div>':'')+'<div class="row"><span>District</span><span>'+(p.district||'-')+'</span></div><div class="row"><span>Date</span><span>'+tdDisp(p.date)+'</span></div>'
     +(t.bpS?'<div class="sec">Triage Vitals</div><div class="row"><span>BP</span><span>'+t.bpS+'/'+t.bpD+' mmHg</span></div><div class="row"><span>Glucose</span><span>'+(t.glucose||'-')+' mmol/L</span></div><div class="row"><span>Weight</span><span>'+(t.weight||'-')+' kg</span></div>':'')
