@@ -481,15 +481,9 @@ function sync(){
     var rows=Array.isArray(d)?d:[];
     var serverIds=rows.map(function(r){return r.id;});
     var unsaved=pts.filter(function(p){return serverIds.indexOf(p.id)<0&&p._unsaved;});
-    var newPts=rows.map(fromRow).concat(unsaved);
-    newPts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-    var changed=(newPts.length!==pts.length)||newPts.some(function(p,i){return !pts[i]||pts[i].id!==p.id||pts[i].status!==p.status;});
-    pts=newPts;
+    pts=rows.map(fromRow).concat(unsaved);
+    pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
     svL(); updCnt();
-    if(changed && document.getElementById('modal').className.indexOf('open')<0){
-      requestAnimationFrame(render);
-    }
-    // pending from previous days
     sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
       if(s2!==200||!Array.isArray(d2)||!d2.length)return;
       var existIds=pts.map(function(p){return p.id;});
@@ -498,9 +492,6 @@ function sync(){
       pts=pts.concat(extra);
       pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
       svL(); updCnt();
-      if(document.getElementById('modal').className.indexOf('open')<0){
-        requestAnimationFrame(render);
-      }
     });
   });
 }
