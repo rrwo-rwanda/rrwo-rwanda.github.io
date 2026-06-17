@@ -485,7 +485,6 @@ function sync(){
       pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
       svL();
       updCnt();
-      updCnt();
       sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
         if(s2===200){
           var rows2=Array.isArray(d2)?d2:[];
@@ -555,12 +554,9 @@ function goStn(s){
   document.getElementById('stnlbl').textContent=lbls[s]||s;
   document.getElementById('srchbar').style.display=(s==='reception'||s==='triage'||s==='eye'||s==='ncd'||s==='child')?'flex':'none';
   ldL();render();updCnt();
-  setTimeout(sync,800);
+  setTimeout(sync,2000);
   if(tmr)clearInterval(tmr);
-  tmr=setInterval(function(){
-    if(cur==='reception'){var fn=document.getElementById('r_fn');if(fn&&fn.value.trim())syncS();else sync();}
-    else sync();
-  },30000);
+  tmr=setInterval(sync,60000);
 }
 function doExit(){
   if(tmr)clearInterval(tmr);
