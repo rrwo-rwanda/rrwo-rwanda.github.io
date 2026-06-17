@@ -1295,7 +1295,7 @@ function openNcd(id,isEdit){
     +'<div class="f" style="margin-bottom:0;"><label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;">Where does this patient go next?</label>'
     +'<select id="n_next_step" style="width:100%;padding:10px;border:1.5px solid #1A6B2A;border-radius:8px;font-size:14px;font-weight:600;margin-top:5px;">'
     +'<option value="pharmacy">&#128138; Send to Pharmacy (has medication)</option>'
-    +(p.service.indexOf('Eye')>=0&&!p.eyeConsult?'<option value="eye-consult">&#128065; Send to Eye Testing</option>':'')'
+    +(p.service.indexOf('Eye')>=0&&!p.eyeConsult?'<option value="eye-consult">&#128065; Send to Eye Testing</option>':'')
     +'<option value="done">&#9989; Discharge (no medication needed)</option>'
     +'</select></div></div>'
     +(isEdit?'<div class="f"><label>Send Patient To</label><select id="n_reroute">'
