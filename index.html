@@ -475,9 +475,7 @@ function fromRow(r){
 }
 
 var _lsig='';
-function _gsig(){
-  return pts.map(function(p){return p.id+'|'+p.status;}).join(',');
-}
+function _gsig(){return pts.map(function(p){return p.id+p.status;}).join(',');}
 
 function sync(){
   var today=td();
@@ -485,18 +483,18 @@ function sync(){
     if(s!==200)return;
     var rows=Array.isArray(d)?d:[];
     var sids=rows.map(function(r){return r.id;});
-    // Keep ALL local patients not yet confirmed by server - prevents data loss
-    // during the gap between registration and successful DB save
-    var localOnly=pts.filter(function(p){return sids.indexOf(p.id)<0;});
-    pts=rows.map(fromRow).concat(localOnly);
+    var local=pts.filter(function(p){return sids.indexOf(p.id)<0;});
+    pts=rows.map(fromRow).concat(local);
     pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
     svL();updCnt();
     sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
-      if(s2===200&&Array.isArray(d2)&&d2.length){
-        var eids=pts.map(function(p){return p.id;});
-        var extra=d2.map(fromRow).filter(function(p){return eids.indexOf(p.id)<0;});
-        if(extra.length){pts=pts.concat(extra);pts.sort(function(a,b){return(a.num||0)-(b.num||0);});svL();updCnt();}
-      }
+      if(s2!==200||!Array.isArray(d2)||!d2.length)return;
+      var eids=pts.map(function(p){return p.id;});
+      var extra=d2.map(fromRow).filter(function(p){return eids.indexOf(p.id)<0;});
+      if(!extra.length)return;
+      pts=pts.concat(extra);
+      pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
+      svL();updCnt();
     });
   });
 }
@@ -507,9 +505,8 @@ function syncS(){
     if(s!==200)return;
     var rows=Array.isArray(d)?d:[];
     var sids=rows.map(function(r){return r.id;});
-    // Keep all local patients not yet in server (today or other days)
-    var localOnly=pts.filter(function(p){return sids.indexOf(p.id)<0;});
-    pts=rows.map(fromRow).concat(localOnly);
+    var local=pts.filter(function(p){return sids.indexOf(p.id)<0;});
+    pts=rows.map(fromRow).concat(local);
     pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
     svL();updCnt();
   });
@@ -517,71 +514,67 @@ function syncS(){
 
 function savePt(p,cb){
   svL();
-  var row=toRow(p);
   var x=new XMLHttpRequest();
   x.open('POST',SB+'/rest/v1/patients',true);
   x.setRequestHeader('apikey',SK);
   x.setRequestHeader('Authorization','Bearer '+SK);
   x.setRequestHeader('Content-Type','application/json');
   x.setRequestHeader('Prefer','resolution=merge-duplicates,return=minimal');
-  x.timeout=12000;
+  x.timeout=15000;
   x.onreadystatechange=function(){
     if(x.readyState!==4)return;
-    if(x.status>=200&&x.status<300){svL();if(cb)cb();}
-    else{
-      var x2=new XMLHttpRequest();
-      x2.open('PATCH',SB+'/rest/v1/patients?id=eq.'+p.id,true);
-      x2.setRequestHeader('apikey',SK);
-      x2.setRequestHeader('Authorization','Bearer '+SK);
-      x2.setRequestHeader('Content-Type','application/json');
-      x2.setRequestHeader('Prefer','return=minimal');
-      x2.timeout=12000;
-      x2.onreadystatechange=function(){if(x2.readyState===4){svL();if(cb)cb();}};
-      x2.onerror=x2.ontimeout=function(){svL();if(cb)cb();};
-      x2.send(JSON.stringify(row));
+    svL();
+    if(cb)cb();
+    if(x.status<200||x.status>=300){
+      console.warn('savePt failed',x.status,x.responseText.substring(0,200));
     }
   };
   x.onerror=x.ontimeout=function(){svL();if(cb)cb();};
-  x.send(JSON.stringify([row]));
+  x.send(JSON.stringify([toRow(p)]));
 }
 
 
 
 // &#9472;&#9472; NAV &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function goStn(s){
-  cur=s;svArr=[];
+  cur=s; svArr=[];
   document.getElementById('pg_login').style.display='none';
   var app=document.getElementById('pg_app');
-  app.style.display='flex';app.style.flexDirection='column';app.style.minHeight='100vh';
+  app.style.display='flex'; app.style.flexDirection='column'; app.style.minHeight='100vh';
   var lbls={reception:'Reception',triage:'Triage',eye:'Eye Consultation',ncd:'NCD Consultation',child:'Children Under 5',pharmacy:'Pharmacy',dashboard:'Dashboard'};
   document.getElementById('stnlbl').textContent=lbls[s]||s;
   document.getElementById('srchbar').style.display=(s==='reception'||s==='triage'||s==='eye'||s==='ncd'||s==='child')?'flex':'none';
-  ldL();render();updCnt();
+  ldL(); render(); updCnt();
+  // clear any old timers
   if(window._st)clearInterval(window._st);
   if(window._rw)clearInterval(window._rw);
-  // 1) pull fresh data immediately
-  setTimeout(sync,300);
-  // 2) keep pulling every 10s (silent, no DOM changes)
+  // pull fresh data from DB immediately
+  setTimeout(sync,400);
+  // timer 1: sync data silently every 8 seconds (no screen changes)
   window._st=setInterval(function(){
     if(!cur)return;
-    if(cur==='reception'){var fn=document.getElementById('r_fn');if(fn&&fn.value.trim())syncS();else sync();}
-    else sync();
-  },10000);
-  // 3) watcher: every 3s, if data changed and no modal -> render once
+    if(cur==='reception'){
+      var fn=document.getElementById('r_fn');
+      if(fn&&fn.value.trim())syncS();else sync();
+    } else {
+      sync();
+    }
+  },8000);
+  // timer 2: watcher every 2 seconds
+  // if data changed AND no modal open &#8594; render once
   window._rw=setInterval(function(){
     if(!cur)return;
     var mo=document.getElementById('modal');
     if(mo&&mo.className.indexOf('open')>=0)return;
     var sig=_gsig();
     if(sig===_lsig)return;
-    _lsig=sig;
     render();
-  },3000);
+  },2000);
 }
 function doExit(){
   if(window._st)clearInterval(window._st);
   if(window._rw)clearInterval(window._rw);
-  cur=null;
+  cur=null; svArr=[];
   document.getElementById('pg_app').style.display='none';
   document.getElementById('pg_login').style.display='flex';
 }
