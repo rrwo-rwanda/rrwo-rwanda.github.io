@@ -474,6 +474,9 @@ function fromRow(r){
   return{id:r.id,num:r.num,idNum:r.id_num||'',fn:r.first_name,ln:r.last_name,age:r.age,dob:r.dob||'',gender:r.gender,phone:r.phone||'',province:r.province||'',district:r.district||'',sector:r.sector||'',cell:r.cell||'',village:r.village||'',parentName:r.parent_name||'',parentPhone:r.parent_phone||'',service:r.service,status:r.status,date:date,regAt:r.reg_at||'',triage:r.triage||null,eyeConsult:r.eye_consult||null,ncdConsult:r.ncd_consult||null,childConsult:r.child_consult||null,rx:r.rx||[],pharmacy:r.pharmacy||null,doneAt:r.done_at||null,pendingAfterPharm:r.pending_after_pharm||null,consultOrder:r.consult_order||null};
 }
 
+var _lastRenderedSig='';
+function _getSig(){return pts.map(function(p){return p.id+'|'+p.status;}).join(',');}
+
 function sync(){
   var today=td();
   sbReq('GET','patients?visit_date=eq.'+today+'&order=num.asc&limit=1000',null,function(s,d){
@@ -485,13 +488,11 @@ function sync(){
     pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
     svL(); updCnt();
     sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
-      if(s2!==200||!Array.isArray(d2)||!d2.length)return;
-      var existIds=pts.map(function(p){return p.id;});
-      var extra=d2.map(fromRow).filter(function(p){return existIds.indexOf(p.id)<0;});
-      if(!extra.length)return;
-      pts=pts.concat(extra);
-      pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-      svL(); updCnt();
+      if(s2===200&&Array.isArray(d2)&&d2.length){
+        var existIds=pts.map(function(p){return p.id;});
+        var extra=d2.map(fromRow).filter(function(p){return existIds.indexOf(p.id)<0;});
+        if(extra.length){pts=pts.concat(extra);pts.sort(function(a,b){return(a.num||0)-(b.num||0);});svL();updCnt();}
+      }
     });
   });
 }
@@ -547,12 +548,25 @@ function goStn(s){
   document.getElementById('stnlbl').textContent=lbls[s]||s;
   document.getElementById('srchbar').style.display=(s==='reception'||s==='triage'||s==='eye'||s==='ncd'||s==='child')?'flex':'none';
   ldL();render();updCnt();
-  setTimeout(sync,2000);
+  _lastRenderedSig='';
+  setTimeout(sync,1000);
   if(tmr)clearInterval(tmr);
+  // Sync data every 10s silently
   tmr=setInterval(function(){
     if(cur==='reception'){var fn=document.getElementById('r_fn');if(fn&&fn.value.trim())syncS();else sync();}
     else sync();
   },10000);
+  // Separate watcher: if data changed AND no modal open -> render
+  if(window._renderWatcher)clearInterval(window._renderWatcher);
+  window._renderWatcher=setInterval(function(){
+    if(!cur)return;
+    var sig=_getSig();
+    if(sig===_lastRenderedSig)return;
+    var mo=document.getElementById('modal');
+    if(mo&&mo.className.indexOf('open')>=0)return;
+    _lastRenderedSig=sig;
+    render();
+  },2000);
 }
 function doExit(){
   if(tmr)clearInterval(tmr);
@@ -562,10 +576,11 @@ function doExit(){
   document.getElementById('sres').innerHTML='';
 }
 function render(){
-  // Never render if a modal is open - would interrupt doctor mid-form
-  if(document.getElementById('modal').className.indexOf('open')>=0) return;
+  if(document.getElementById('modal').className.indexOf('open')>=0)return;
   var fns={reception:rRec,triage:rTriage,eye:rEye,ncd:rNcd,child:rChild,pharmacy:rPharm,dashboard:rDash};
-  if(fns[cur])requestAnimationFrame(function(){fns[cur]();});
+  if(!fns[cur])return;
+  _lastRenderedSig=_getSig();
+  requestAnimationFrame(function(){fns[cur]();});
 }
 function closeMo(){document.getElementById('modal').className='mo';}
 function openMo(h){document.getElementById('mbody').innerHTML=h;document.getElementById('modal').className='mo open';}
