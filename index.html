@@ -477,17 +477,21 @@ function fromRow(r){
 function sync(){
   sSet('Syncing...');
   var today=td();
-  // Query 1: all of today's patients
   sbReq('GET','patients?visit_date=eq.'+today+'&order=num.asc&limit=1000',null,function(s,d){
     if(s===200){
-      // Handle both array response and null/empty (empty table = valid 200)
       var rows=Array.isArray(d)?d:[];
       var serverIds=rows.map(function(r){return r.id;});
       var unsaved=pts.filter(function(p){return serverIds.indexOf(p.id)<0&&p._unsaved;});
-      pts=rows.map(fromRow).concat(unsaved);
-      pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-      svL();sSet('Ready ('+pts.length+')');render();updCnt();
-      // Query 2: pending patients from ANY previous date (not today)
+      // Merge server data with local &#8212; don't wipe until we have new data
+      var newPts=rows.map(fromRow).concat(unsaved);
+      newPts.sort(function(a,b){return(a.num||0)-(b.num||0);});
+      // Only update and re-render if data actually changed
+      var changed=(JSON.stringify(newPts.map(function(p){return p.id+p.status;}))!==JSON.stringify(pts.map(function(p){return p.id+p.status;})));
+      pts=newPts;
+      svL();
+      if(changed){render();updCnt();}
+      sSet('Ready ('+pts.length+')');
+      // Query 2: pending from previous days
       sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
         if(s2===200){
           var rows2=Array.isArray(d2)?d2:[];
@@ -504,7 +508,7 @@ function sync(){
         }
       });
     } else {
-      ldL();render();updCnt();
+      ldL();
       sSet(s===0?'Offline':'DB Error '+s);
     }
   });
@@ -589,7 +593,7 @@ function goStn(s){
   tmr=setInterval(function(){
     if(cur==='reception'){var fn=document.getElementById('r_fn');if(fn&&fn.value.trim())syncS();else sync();}
     else sync();
-  },6000);
+  },15000);
 }
 function doExit(){
   if(tmr)clearInterval(tmr);
