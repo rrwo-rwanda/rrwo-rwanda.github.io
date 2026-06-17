@@ -567,7 +567,7 @@ function doExit(){
 }
 function render(){
   var fns={reception:rRec,triage:rTriage,eye:rEye,ncd:rNcd,child:rChild,pharmacy:rPharm,dashboard:rDash};
-  if(fns[cur])fns[cur]();
+  if(fns[cur])requestAnimationFrame(function(){fns[cur]();});
 }
 function closeMo(){document.getElementById('modal').className='mo';}
 function openMo(h){document.getElementById('mbody').innerHTML=h;document.getElementById('modal').className='mo open';}
@@ -833,7 +833,7 @@ function rTriage(){
 function callTriage(id){
   var p=byId(id);if(!p)return;
   p.status='triage';
-  savePt(p,function(){rTriage();openTriage(id);});
+  savePt(p,function(){requestAnimationFrame(function(){rTriage();openTriage(id);});});
 }
 
 function openTriage(id){
@@ -886,7 +886,7 @@ function doneTriage(id){
     p.consultOrder=['eye-consult'];
   }
   if(p.status==='done')p.doneAt=tn();
-  savePt(p,function(){closeMo();rTriage();});
+  savePt(p,function(){closeMo();requestAnimationFrame(rTriage);});
 }
 
 // &#9472;&#9472; EYE &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -1133,7 +1133,7 @@ function saveEditEye(id){
       if(eyeIdx>=0&&order[eyeIdx+1]==='ncd-consult'&&!p.ncdConsult)p.pendingAfterPharm='ncd-consult';
     }
   }
-  savePt(p,function(){closeMo();render();});
+  savePt(p,function(){closeMo();requestAnimationFrame(render);});
 }
 
 function doneEye(id){
@@ -1156,7 +1156,7 @@ function doneEye(id){
   p.rx=(p.rx||[]).concat(getRx());
   p.status='pharmacy';
   p.pendingAfterPharm=null;
-  savePt(p,function(){closeMo();rEye();});
+  savePt(p,function(){closeMo();requestAnimationFrame(rEye);});
 }
 
 // &#9472;&#9472; NCD &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -1290,7 +1290,7 @@ function saveEditNcd(id){
       if(ncdIdx>=0&&order[ncdIdx+1]==='eye-consult'&&!p.eyeConsult)p.pendingAfterPharm='eye-consult';
     }
   }
-  savePt(p,function(){closeMo();render();});
+  savePt(p,function(){closeMo();requestAnimationFrame(render);});
 }
 
 function doneNcd(id){
@@ -1312,7 +1312,7 @@ function doneNcd(id){
     }
   }
   // If going directly to Eye (no medication needed at this point)
-  savePt(p,function(){closeMo();rNcd();});
+  savePt(p,function(){closeMo();requestAnimationFrame(rNcd);});
 }
 
 // &#9472;&#9472; CHILD &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -1439,7 +1439,7 @@ function saveEditChild(id){
   var p=byId(id);if(!p)return;
   p.childConsult={at:(p.childConsult&&p.childConsult.at)||tn(),visitDate:gv('c_vd'),visitType:gv('c_vt'),visitNum:gv('c_vn'),referredBy:gv('c_rb'),weight:gv('c_wt'),height:gv('c_ht'),muac:gv('c_mu'),headCirc:gv('c_hc'),wfa:gv('c_wfa'),hfa:gv('c_hfa'),wfh:gv('c_wfh'),nutrition:getOther('c_nu','c_nu_ot'),breastfeeding:getOther('c_bf','c_bf_ot'),edema:gv('c_ed'),immunization:getOther('c_im','c_im_ot'),development:getOther('c_dv','c_dv_ot'),deworming:gv('c_dw'),vitaminA:gv('c_va'),labs:{malaria:gv('c_ml'),hgb:gv('c_hb')},diagnosis:getOther('c_dg','c_dg_ot'),notes:gv('c_no')};
   p.rx=getRx();
-  savePt(p,function(){closeMo();render();});
+  savePt(p,function(){closeMo();requestAnimationFrame(render);});
 }
 
 function doneChild(id){
@@ -1448,7 +1448,7 @@ function doneChild(id){
   p.rx=(p.rx||[]).concat(getRx());
   p.status=gv('c_nx');
   if(p.status==='done')p.doneAt=tn();
-  savePt(p,function(){closeMo();rChild();});
+  savePt(p,function(){closeMo();requestAnimationFrame(rChild);});
 }
 
 // &#9472;&#9472; PHARMACY &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -2010,7 +2010,7 @@ function saveEditPersonal(id){
   var vl=gv('ep_village');if(vl!==undefined)p.village=vl;
   var pn=gv('ep_pn');if(pn!==undefined)p.parentName=pn;
   var pp=gv('ep_pp');if(pp!==undefined)p.parentPhone=pp;
-  savePt(p,function(){closeMo();render();});
+  savePt(p,function(){closeMo();requestAnimationFrame(render);});
 }
 
 function pCard(id){
