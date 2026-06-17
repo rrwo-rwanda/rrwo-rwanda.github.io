@@ -483,14 +483,12 @@ function sync(){
       var unsaved=pts.filter(function(p){return serverIds.indexOf(p.id)<0&&p._unsaved;});
       var newPts=rows.map(fromRow).concat(unsaved);
       newPts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-      // Check if anything changed before re-rendering
       var sig=newPts.map(function(p){return p.id+'|'+p.status;}).join(',');
       var oldSig=pts.map(function(p){return p.id+'|'+p.status;}).join(',');
       pts=newPts;
       svL();
       updCnt();
       if(sig!==oldSig){requestAnimationFrame(render);}
-      // Also fetch pending from previous days
       sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
         if(s2===200&&Array.isArray(d2)&&d2.length){
           var existIds=pts.map(function(p){return p.id;});
@@ -532,16 +530,15 @@ function savePt(p,cb){
   var row=toRow(p);
   var base=SB+'/rest/v1/patients';
   var h={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'};
-  function go(method,url,body,next){
+  function go(method,u,body,next){
     var x=new XMLHttpRequest();
-    x.open(method,url,true);
+    x.open(method,u,true);
     Object.keys(h).forEach(function(k){x.setRequestHeader(k,h[k]);});
     x.timeout=10000;
     x.onreadystatechange=function(){if(x.readyState===4)next(x.status);};
     x.onerror=x.ontimeout=function(){next(0);};
     x.send(body?JSON.stringify(body):null);
   }
-  // Try PATCH first (update). If nothing updated, try POST (insert).
   go('PATCH',base+'?id=eq.'+p.id,row,function(s){
     if(s===200||s===204){
       svL();if(cb)cb();
@@ -575,7 +572,7 @@ function goStn(s){
     } else {
       sync();
     }
-  },5000);
+  },3000);
 }
 function doExit(){
   if(tmr)clearInterval(tmr);
