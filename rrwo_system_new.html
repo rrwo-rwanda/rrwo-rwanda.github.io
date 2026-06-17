@@ -833,22 +833,48 @@ function regPt(){
     dob=y+'-'+(m<10?'0':'')+m+'-'+(d<10?'0':'')+d;
   }
   if(!fn||!ln||!gn||!pv||!dt||!sc||!dob||!svArr.length){
-    al.className='al aER';al.textContent='Please fill all required fields (including Date of Birth and Sector) and select a service.';return;
+    al.className='al aER';al.textContent='Please fill all required fields and select a service.';return;
   }
   if(svArr.indexOf('c')>=0&&(!pn||!pp)){
-    al.className='al aER';al.textContent='Please fill parent/guardian name and phone for Children Under 5.';return;
+    al.className='al aER';al.textContent='Please fill parent/guardian name and phone.';return;
   }
   var svc=svArr.map(function(s){return s==='e'?'Eye Testing':s==='n'?'NCD Testing':'Children Under 5';}).join(' + ');
   var initSt=svArr.length===1&&svArr[0]==='c'?'child-service':'waiting';
-  var p={id:Date.now().toString(),num:nxt(),fn:fn,ln:ln,age:String(age),dob:dob,gender:gn,phone:gv('r_ph'),idNum:gv('r_id'),service:svc,province:pv,district:dt,sector:sc,cell:gv('r_cl'),village:gv('r_vl'),parentName:pn,parentPhone:pp,status:initSt,date:td(),regAt:tn(),triage:null,eyeConsult:null,ncdConsult:null,childConsult:null,rx:[],pharmacy:null,doneAt:null,_unsaved:true};
-  pts.push(p); // add to display immediately
+  // Get next number from current pts (loaded from DB)
+  var maxNum=0;
+  pts.forEach(function(p){if((parseInt(p.num)||0)>maxNum)maxNum=parseInt(p.num)||0;});
+  var nextNum=maxNum+1;
+  var p={id:Date.now().toString(),num:nextNum,fn:fn,ln:ln,age:String(age),dob:dob,gender:gn,phone:gv('r_ph'),idNum:gv('r_id'),service:svc,province:pv,district:dt,sector:sc,cell:gv('r_cl'),village:gv('r_vl'),parentName:pn,parentPhone:pp,status:initSt,date:td(),regAt:tn(),triage:null,eyeConsult:null,ncdConsult:null,childConsult:null,rx:[],pharmacy:null,doneAt:null,_unsaved:true};
   svArr=[];
-  al.className='al aOK';al.textContent='Saving #'+p.num+'...';
-  savePt(p,function(){
-    al.className='al aOK';
-    al.textContent='Patient #'+p.num+' '+fn+' '+ln+' saved to database!';
-    syncNow(); // refresh from DB to confirm
-  });
+  al.className='al aOK';al.textContent='Saving patient to database...';
+  // Save directly to DB via XHR
+  var x=new XMLHttpRequest();
+  x.open('POST',SB+'/rest/v1/patients',true);
+  x.setRequestHeader('apikey',SK);
+  x.setRequestHeader('Authorization','Bearer '+SK);
+  x.setRequestHeader('Content-Type','application/json');
+  x.setRequestHeader('Prefer','resolution=merge-duplicates,return=minimal');
+  x.timeout=15000;
+  x.onreadystatechange=function(){
+    if(x.readyState!==4)return;
+    if(x.status>=200&&x.status<300){
+      al.className='al aOK';
+      al.textContent='Patient #'+nextNum+' '+fn+' '+ln+' saved!';
+      syncNow(); // Refresh from DB to show confirmed data
+    } else {
+      var errMsg='Save failed ('+x.status+')';
+      try{var e=JSON.parse(x.responseText);errMsg+=' '+( e.message||e.hint||e.code||'');}catch(ex){}
+      al.className='al aER';
+      al.textContent=errMsg;
+      sSet(errMsg);
+      console.error('Save error:',x.status,x.responseText);
+    }
+  };
+  x.onerror=x.ontimeout=function(){
+    al.className='al aER';
+    al.textContent='Network error - check connection';
+  };
+  x.send(JSON.stringify([toRow(p)]));
 }
 
 // &#9472;&#9472; TRIAGE &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
