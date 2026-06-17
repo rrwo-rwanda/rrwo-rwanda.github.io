@@ -474,8 +474,8 @@ function fromRow(r){
   return{id:r.id,num:r.num,idNum:r.id_num||'',fn:r.first_name,ln:r.last_name,age:r.age,dob:r.dob||'',gender:r.gender,phone:r.phone||'',province:r.province||'',district:r.district||'',sector:r.sector||'',cell:r.cell||'',village:r.village||'',parentName:r.parent_name||'',parentPhone:r.parent_phone||'',service:r.service,status:r.status,date:date,regAt:r.reg_at||'',triage:r.triage||null,eyeConsult:r.eye_consult||null,ncdConsult:r.ncd_consult||null,childConsult:r.child_consult||null,rx:r.rx||[],pharmacy:r.pharmacy||null,doneAt:r.done_at||null,pendingAfterPharm:r.pending_after_pharm||null,consultOrder:r.consult_order||null};
 }
 
-var _lastRenderedSig='';
-function _getSig(){return pts.map(function(p){return p.id+'|'+p.status;}).join(',');}
+var _lastSig='';
+function _sig(){return pts.map(function(p){return p.id+'|'+p.status;}).join(',');}
 
 function sync(){
   var today=td();
@@ -570,23 +570,18 @@ function goStn(s){
   document.getElementById('stnlbl').textContent=lbls[s]||s;
   document.getElementById('srchbar').style.display=(s==='reception'||s==='triage'||s==='eye'||s==='ncd'||s==='child')?'flex':'none';
   ldL();render();updCnt();
-  _lastRenderedSig='';
-  setTimeout(sync,1000);
+  setTimeout(sync,500);
   if(tmr)clearInterval(tmr);
-  // Sync data every 10s silently
   tmr=setInterval(function(){
     if(cur==='reception'){var fn=document.getElementById('r_fn');if(fn&&fn.value.trim())syncS();else sync();}
     else sync();
   },10000);
-  // Separate watcher: if data changed AND no modal open -> render
-  if(window._renderWatcher)clearInterval(window._renderWatcher);
-  window._renderWatcher=setInterval(function(){
+  if(window._rw)clearInterval(window._rw);
+  window._rw=setInterval(function(){
     if(!cur)return;
-    var sig=_getSig();
-    if(sig===_lastRenderedSig)return;
     var mo=document.getElementById('modal');
     if(mo&&mo.className.indexOf('open')>=0)return;
-    _lastRenderedSig=sig;
+    if(_sig()===_lastSig)return;
     render();
   },2000);
 }
@@ -601,7 +596,7 @@ function render(){
   if(document.getElementById('modal').className.indexOf('open')>=0)return;
   var fns={reception:rRec,triage:rTriage,eye:rEye,ncd:rNcd,child:rChild,pharmacy:rPharm,dashboard:rDash};
   if(!fns[cur])return;
-  _lastRenderedSig=_getSig();
+  _lastSig=_sig();
   requestAnimationFrame(function(){fns[cur]();});
 }
 function closeMo(){document.getElementById('modal').className='mo';}
