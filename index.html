@@ -517,53 +517,52 @@ function syncS(){
 }
 
 function savePt(p,cb){
-  svL(); // save locally immediately
+  svL();
   sSet('Saving...');
   var row=toRow(p);
-  // Use upsert: POST with Prefer header &#8212; inserts or updates based on id primary key
-  var x=new XMLHttpRequest();
-  x.open('POST',SB+'/rest/v1/patients',true);
-  x.setRequestHeader('apikey',SK);
-  x.setRequestHeader('Authorization','Bearer '+SK);
-  x.setRequestHeader('Content-Type','application/json');
-  x.setRequestHeader('Prefer','resolution=merge-duplicates,return=minimal');
-  x.timeout=12000;
-  x.onreadystatechange=function(){
-    if(x.readyState!==4)return;
-    var s=x.status;
-    if(s>=200&&s<300){
-      sSet('Saved');svL();if(cb)cb();
+  var SBU=SB+'/rest/v1/patients';
+  var hdrs={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'};
+  function req(method,path,body,done){
+    var x=new XMLHttpRequest();
+    x.open(method,SBU+(path||''),true);
+    Object.keys(hdrs).forEach(function(k){x.setRequestHeader(k,hdrs[k]);});
+    x.timeout=10000;
+    x.onreadystatechange=function(){if(x.readyState===4)done(x.status,x.responseText);};
+    x.onerror=x.ontimeout=function(){done(0,'');};
+    x.send(body?JSON.stringify(body):null);
+  }
+  // Step 1: Try to UPDATE existing row
+  req('PATCH','?id=eq.'+p.id,row,function(s,r){
+    if(s===200||s===204){
+      // Check if any row was actually updated (Supabase returns empty [] if no match)
+      // PATCH 200 with empty means row didn't exist - need to INSERT
+      req('GET','?id=eq.'+p.id+'&select=id',null,function(s2,r2){
+        try{
+          var exists=JSON.parse(r2);
+          if(exists&&exists.length>0){
+            sSet('Saved');svL();if(cb)cb();
+          } else {
+            // Row doesn't exist - INSERT
+            req('POST','',row,function(s3,r3){
+              if(s3===200||s3===201){sSet('Saved');svL();}
+              else{sSet('Local only');console.error('INSERT failed',s3,r3);}
+              if(cb)cb();
+            });
+          }
+        }catch(e){sSet('Saved');svL();if(cb)cb();}
+      });
     } else {
-      // Upsert failed &#8212; try plain PATCH
-      var x2=new XMLHttpRequest();
-      x2.open('PATCH',SB+'/rest/v1/patients?id=eq.'+p.id,true);
-      x2.setRequestHeader('apikey',SK);
-      x2.setRequestHeader('Authorization','Bearer '+SK);
-      x2.setRequestHeader('Content-Type','application/json');
-      x2.setRequestHeader('Prefer','return=minimal');
-      x2.timeout=12000;
-      x2.onreadystatechange=function(){
-        if(x2.readyState!==4)return;
-        if(x2.status>=200&&x2.status<300){
-          sSet('Saved');svL();if(cb)cb();
-        } else {
-          // Saved locally only
-          sSet('Local only - retry push');
-          console.error('savePt failed',s,x.responseText);
-          if(cb)cb();
-        }
-      };
-      x2.onerror=x2.ontimeout=function(){sSet('Local only');if(cb)cb();};
-      x2.send(JSON.stringify(row));
+      // PATCH failed - try INSERT
+      req('POST','',row,function(s2,r2){
+        if(s2===200||s2===201){sSet('Saved');svL();}
+        else{sSet('Local only');console.error('Save failed',s2,r2);}
+        if(cb)cb();
+      });
     }
-  };
-  x.onerror=x.ontimeout=function(){
-    sSet('Local only - offline');
-    if(cb)cb();
-  };
-  x.send(JSON.stringify([row]));
+  });
 }
-savePt._warnShown=false;
+
+
 
 // &#9472;&#9472; NAV &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function goStn(s){
