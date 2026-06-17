@@ -474,23 +474,25 @@ function fromRow(r){
   return{id:r.id,num:r.num,idNum:r.id_num||'',fn:r.first_name,ln:r.last_name,age:r.age,dob:r.dob||'',gender:r.gender,phone:r.phone||'',province:r.province||'',district:r.district||'',sector:r.sector||'',cell:r.cell||'',village:r.village||'',parentName:r.parent_name||'',parentPhone:r.parent_phone||'',service:r.service,status:r.status,date:date,regAt:r.reg_at||'',triage:r.triage||null,eyeConsult:r.eye_consult||null,ncdConsult:r.ncd_consult||null,childConsult:r.child_consult||null,rx:r.rx||[],pharmacy:r.pharmacy||null,doneAt:r.done_at||null,pendingAfterPharm:r.pending_after_pharm||null,consultOrder:r.consult_order||null};
 }
 
-var _lastSig='';
-function _sig(){return pts.map(function(p){return p.id+'|'+p.status;}).join(',');}
+var _lsig='';
+function _gsig(){
+  return pts.map(function(p){return p.id+'|'+p.status;}).join(',');
+}
 
 function sync(){
   var today=td();
   sbReq('GET','patients?visit_date=eq.'+today+'&order=num.asc&limit=1000',null,function(s,d){
     if(s!==200)return;
     var rows=Array.isArray(d)?d:[];
-    var serverIds=rows.map(function(r){return r.id;});
-    var unsaved=pts.filter(function(p){return serverIds.indexOf(p.id)<0&&p._unsaved;});
+    var sids=rows.map(function(r){return r.id;});
+    var unsaved=pts.filter(function(p){return sids.indexOf(p.id)<0&&p._unsaved;});
     pts=rows.map(fromRow).concat(unsaved);
     pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-    svL(); updCnt();
+    svL();updCnt();
     sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
       if(s2===200&&Array.isArray(d2)&&d2.length){
-        var existIds=pts.map(function(p){return p.id;});
-        var extra=d2.map(fromRow).filter(function(p){return existIds.indexOf(p.id)<0;});
+        var eids=pts.map(function(p){return p.id;});
+        var extra=d2.map(fromRow).filter(function(p){return eids.indexOf(p.id)<0;});
         if(extra.length){pts=pts.concat(extra);pts.sort(function(a,b){return(a.num||0)-(b.num||0);});svL();updCnt();}
       }
     });
@@ -502,60 +504,43 @@ function syncS(){
   sbReq('GET','patients?visit_date=eq.'+today+'&order=num.asc&limit=1000',null,function(s,d){
     if(s!==200)return;
     var rows=Array.isArray(d)?d:[];
-    var serverIds=rows.map(function(r){return r.id;});
-    var unsaved=pts.filter(function(p){return serverIds.indexOf(p.id)<0&&p._unsaved;});
-    var otherDays=pts.filter(function(p){return p.date!==today&&serverIds.indexOf(p.id)<0;});
-    pts=rows.map(fromRow).concat(unsaved).concat(otherDays);
+    var sids=rows.map(function(r){return r.id;});
+    var unsaved=pts.filter(function(p){return sids.indexOf(p.id)<0&&p._unsaved;});
+    var other=pts.filter(function(p){return p.date!==today&&sids.indexOf(p.id)<0;});
+    pts=rows.map(fromRow).concat(unsaved).concat(other);
     pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-    svL(); updCnt();
+    svL();updCnt();
   });
 }
+
 function savePt(p,cb){
   svL();
   var row=toRow(p);
-  var base=SB+'/rest/v1/patients';
-  var SK2=SK;
-
-  // First try PATCH - use return=representation to detect if row existed
-  var xp=new XMLHttpRequest();
-  xp.open('PATCH',base+'?id=eq.'+p.id,true);
-  xp.setRequestHeader('apikey',SK2);
-  xp.setRequestHeader('Authorization','Bearer '+SK2);
-  xp.setRequestHeader('Content-Type','application/json');
-  xp.setRequestHeader('Prefer','return=representation');
-  xp.timeout=10000;
-  xp.onreadystatechange=function(){
-    if(xp.readyState!==4)return;
-    var updated=false;
-    try{var r=JSON.parse(xp.responseText);updated=Array.isArray(r)&&r.length>0;}catch(e){}
-    if(updated){
-      svL();if(cb)cb();return;
+  var x=new XMLHttpRequest();
+  x.open('POST',SB+'/rest/v1/patients',true);
+  x.setRequestHeader('apikey',SK);
+  x.setRequestHeader('Authorization','Bearer '+SK);
+  x.setRequestHeader('Content-Type','application/json');
+  x.setRequestHeader('Prefer','resolution=merge-duplicates,return=minimal');
+  x.timeout=12000;
+  x.onreadystatechange=function(){
+    if(x.readyState!==4)return;
+    if(x.status>=200&&x.status<300){svL();if(cb)cb();}
+    else{
+      var x2=new XMLHttpRequest();
+      x2.open('PATCH',SB+'/rest/v1/patients?id=eq.'+p.id,true);
+      x2.setRequestHeader('apikey',SK);
+      x2.setRequestHeader('Authorization','Bearer '+SK);
+      x2.setRequestHeader('Content-Type','application/json');
+      x2.setRequestHeader('Prefer','return=minimal');
+      x2.timeout=12000;
+      x2.onreadystatechange=function(){if(x2.readyState===4){svL();if(cb)cb();}};
+      x2.onerror=x2.ontimeout=function(){svL();if(cb)cb();};
+      x2.send(JSON.stringify(row));
     }
-    // Row did not exist - INSERT
-    var xi=new XMLHttpRequest();
-    xi.open('POST',base,true);
-    xi.setRequestHeader('apikey',SK2);
-    xi.setRequestHeader('Authorization','Bearer '+SK2);
-    xi.setRequestHeader('Content-Type','application/json');
-    xi.setRequestHeader('Prefer','return=minimal');
-    xi.timeout=10000;
-    xi.onreadystatechange=function(){
-      if(xi.readyState!==4)return;
-      if(xi.status===200||xi.status===201){
-        svL();if(cb)cb();
-      } else {
-        console.error('INSERT failed:',xi.status,xi.responseText);
-        svL();if(cb)cb();
-      }
-    };
-    xi.onerror=xi.ontimeout=function(){svL();if(cb)cb();};
-    xi.send(JSON.stringify([row]));
   };
-  xp.onerror=xp.ontimeout=function(){
-    // offline - data is in localStorage
-    svL();if(cb)cb();
-  };
-  xp.send(JSON.stringify(row));
+  x.onerror=x.ontimeout=function(){svL();if(cb)cb();};
+  x.send(JSON.stringify([row]));
 }
 
 
@@ -570,34 +555,40 @@ function goStn(s){
   document.getElementById('stnlbl').textContent=lbls[s]||s;
   document.getElementById('srchbar').style.display=(s==='reception'||s==='triage'||s==='eye'||s==='ncd'||s==='child')?'flex':'none';
   ldL();render();updCnt();
-  setTimeout(sync,500);
-  if(tmr)clearInterval(tmr);
-  tmr=setInterval(function(){
+  if(window._st)clearInterval(window._st);
+  if(window._rw)clearInterval(window._rw);
+  // 1) pull fresh data immediately
+  setTimeout(sync,300);
+  // 2) keep pulling every 10s (silent, no DOM changes)
+  window._st=setInterval(function(){
+    if(!cur)return;
     if(cur==='reception'){var fn=document.getElementById('r_fn');if(fn&&fn.value.trim())syncS();else sync();}
     else sync();
   },10000);
-  if(window._rw)clearInterval(window._rw);
+  // 3) watcher: every 3s, if data changed and no modal -> render once
   window._rw=setInterval(function(){
     if(!cur)return;
     var mo=document.getElementById('modal');
     if(mo&&mo.className.indexOf('open')>=0)return;
-    if(_sig()===_lastSig)return;
+    var sig=_gsig();
+    if(sig===_lsig)return;
+    _lsig=sig;
     render();
-  },2000);
+  },3000);
 }
 function doExit(){
-  if(tmr)clearInterval(tmr);
+  if(window._st)clearInterval(window._st);
+  if(window._rw)clearInterval(window._rw);
   cur=null;
   document.getElementById('pg_app').style.display='none';
   document.getElementById('pg_login').style.display='flex';
-  document.getElementById('sres').innerHTML='';
 }
 function render(){
-  if(document.getElementById('modal').className.indexOf('open')>=0)return;
+  var mo=document.getElementById('modal');
+  if(mo&&mo.className.indexOf('open')>=0)return;
+  _lsig=_gsig();
   var fns={reception:rRec,triage:rTriage,eye:rEye,ncd:rNcd,child:rChild,pharmacy:rPharm,dashboard:rDash};
-  if(!fns[cur])return;
-  _lastSig=_sig();
-  requestAnimationFrame(function(){fns[cur]();});
+  if(fns[cur])fns[cur]();
 }
 function closeMo(){document.getElementById('modal').className='mo';}
 function openMo(h){document.getElementById('mbody').innerHTML=h;document.getElementById('modal').className='mo open';}
