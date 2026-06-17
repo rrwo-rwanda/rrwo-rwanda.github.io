@@ -1290,14 +1290,22 @@ function openNcd(id,isEdit){
     +'<div class="f"><label>Notes</label><textarea id="n_notes" placeholder="Findings, advice, follow-up...">'+(n.notes||'')+'</textarea></div>'
     +'<div class="sh shG"><h3>Treatment</h3></div>'
     +'<div class="f"><label>Medications</label><div id="rxl"></div><button class="btn bX bsm" data-action="addRx" style="margin-top:5px;">+ Add Medication</button></div>'
+    +'<div class="sh shG"><h3>Next Step</h3></div>'
+    +'<div style="background:#E8F5E9;border-radius:8px;padding:12px;margin-bottom:12px;">'
+    +'<div class="f" style="margin-bottom:0;"><label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;">Where does this patient go next?</label>'
+    +'<select id="n_next_step" style="width:100%;padding:10px;border:1.5px solid #1A6B2A;border-radius:8px;font-size:14px;font-weight:600;margin-top:5px;">'
+    +'<option value="pharmacy">&#128138; Send to Pharmacy (has medication)</option>'
+    +(p.service.indexOf('Eye')>=0&&!p.eyeConsult?'<option value="eye-consult">&#128065; Send to Eye Testing</option>':'')'
+    +'<option value="done">&#9989; Discharge (no medication needed)</option>'
+    +'</select></div></div>'
     +(isEdit?'<div class="f"><label>Send Patient To</label><select id="n_reroute">'
       +'<option value="keep">&#8212; Keep current location &#8212;</option>'
       +'<option value="pharmacy">&#128138; Send to Pharmacy</option>'
-      +(p.service.indexOf('Eye')>=0&&!p.eyeConsult?'<option value="eye-consult">&#128065; Eye Consultation</option>':'')
+      +(p.service.indexOf('Eye')>=0&&!p.eyeConsult?'<option value="eye-consult">&#128065; Eye Consultation</option>':'')'
       +'<option value="done">&#9989; Discharge</option>'
       +'</select></div>':'')
     +'<div class="g2" style="margin-top:10px;">'
-    +'<button class="btn bG" data-action="'+(isEdit?'saveEditNcd':'doneNcd')+'" data-pid="'+p.id+'">'+(isEdit?'Save Changes':'Complete NCD Consultation &rarr;')+'</button>'
+    +'<button class="btn bG" data-action="'+(isEdit?'saveEditNcd':'doneNcd')+'" data-pid="'+p.id+'">'+(isEdit?'Save Changes':'Complete NCD &rarr;')+'</button>'
     +'<button class="btn bX" data-action="closeMo">Cancel</button></div>');
   var sel=document.getElementById('n_mal');if(sel&&lb.malaria)sel.value=lb.malaria;
   sel=document.getElementById('n_hiv');if(sel&&lb.hiv)sel.value=lb.hiv;
@@ -1330,15 +1338,21 @@ function doneNcd(id){
   var p=byId(id);if(!p)return;
   p.ncdConsult={at:tn(),currentMeds:gv('n_meds'),chiefComplaint:gv('n_cc'),pulse:gv('n_pulse'),o2:gv('n_o2'),waist:gv('n_waist'),labs:{malaria:gv('n_mal'),glucose:gv('n_glu2'),hgb:gv('n_hgb'),cholesterol:gv('n_chol'),hiv:gv('n_hiv'),urine:gv('n_uri'),pregnancy:gv('n_preg')},diagnosis:getOther('n_diag','n_diag_ot'),riskLevel:gv('n_risk'),notes:gv('n_notes')};
   p.rx=(p.rx||[]).concat(getRx());
-  // Always send to pharmacy &#8212; flow is fixed
-  p.status='pharmacy';
-  // If multi-service and Eye not yet done, mark Eye as pending after this pharmacy visit
+  // Doctor chooses next step
+  var next=gv('n_next_step')||'pharmacy';
+  p.status=next;
   p.pendingAfterPharm=null;
-  var order=p.consultOrder||[];
-  var ncdIdx=order.indexOf('ncd-consult');
-  if(ncdIdx>=0&&order[ncdIdx+1]==='eye-consult'&&!p.eyeConsult){
-    p.pendingAfterPharm='eye-consult';
+  if(next==='done'){
+    p.doneAt=tn();
+  } else if(next==='pharmacy'){
+    // If also has Eye service pending, mark it so pharmacy routes there after dispensing
+    var order=p.consultOrder||[];
+    var ncdIdx=order.indexOf('ncd-consult');
+    if(ncdIdx>=0&&order[ncdIdx+1]==='eye-consult'&&!p.eyeConsult){
+      p.pendingAfterPharm='eye-consult';
+    }
   }
+  // If going directly to Eye (no medication needed at this point)
   savePt(p,function(){closeMo();rNcd();});
 }
 
