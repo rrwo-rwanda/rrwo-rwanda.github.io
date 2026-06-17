@@ -475,45 +475,32 @@ function fromRow(r){
 }
 
 function sync(){
-  sSet('Syncing...');
   var today=td();
   sbReq('GET','patients?visit_date=eq.'+today+'&order=num.asc&limit=1000',null,function(s,d){
     if(s===200){
       var rows=Array.isArray(d)?d:[];
       var serverIds=rows.map(function(r){return r.id;});
       var unsaved=pts.filter(function(p){return serverIds.indexOf(p.id)<0&&p._unsaved;});
-      // Merge server data with local &#8212; don't wipe until we have new data
-      var newPts=rows.map(fromRow).concat(unsaved);
-      newPts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-      // Only update and re-render if data actually changed
-      var changed=(JSON.stringify(newPts.map(function(p){return p.id+p.status;}))!==JSON.stringify(pts.map(function(p){return p.id+p.status;})));
-      pts=newPts;
+      pts=rows.map(fromRow).concat(unsaved);
+      pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
       svL();
-      if(changed){render();updCnt();}
+      updCnt();
       sSet('Ready ('+pts.length+')');
-      // Query 2: pending from previous days
       sbReq('GET','patients?visit_date=neq.'+today+'&status=neq.done&order=num.asc&limit=500',null,function(s2,d2){
         if(s2===200){
           var rows2=Array.isArray(d2)?d2:[];
           if(rows2.length){
             var existIds=pts.map(function(p){return p.id;});
             var extra=rows2.map(fromRow).filter(function(p){return existIds.indexOf(p.id)<0;});
-            if(extra.length){
-              pts=pts.concat(extra);
-              pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-              svL();render();updCnt();
-            }
+            if(extra.length){pts=pts.concat(extra);pts.sort(function(a,b){return(a.num||0)-(b.num||0);});svL();updCnt();sSet('Ready ('+pts.length+')');}
           }
-          sSet('Ready ('+pts.length+')');
         }
       });
     } else {
-      ldL();
-      sSet(s===0?'Offline':'DB Error '+s);
+      ldL();sSet(s===0?'Offline':'DB Err '+s);
     }
   });
 }
-
 function syncS(){
   var today=td();
   sbReq('GET','patients?visit_date=eq.'+today+'&order=num.asc&limit=1000',null,function(s,d){
@@ -524,7 +511,7 @@ function syncS(){
       var otherDays=pts.filter(function(p){return p.date!==today&&serverIds.indexOf(p.id)<0;});
       pts=rows.map(fromRow).concat(unsaved).concat(otherDays);
       pts.sort(function(a,b){return(a.num||0)-(b.num||0);});
-      svL();sSet('Ready ('+pts.length+')');
+      svL();updCnt();sSet('Ready ('+pts.length+')');
     }
   });
 }
